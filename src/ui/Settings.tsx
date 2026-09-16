@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { AlgSet } from '../sets/types';
 import type { SetSettings, Slot } from '../trainer/trainer';
 
@@ -8,11 +9,12 @@ function groupRange(set: AlgSet, g: number): string {
   return contiguous && ids.length > 1 ? `${ids[0]}–${ids[ids.length - 1]}` : `${ids.length}`;
 }
 
-export function Settings({ set, settings, onChange, onReset }: {
+export function Settings({ set, settings, onChange, onReset, account }: {
   set: AlgSet;
   settings: SetSettings;
   onChange: (s: SetSettings) => void;
   onReset: () => void;
+  account?: ReactNode;
 }) {
   const toggleGroup = (g: number) => {
     const gs = settings.groups;
@@ -62,6 +64,7 @@ export function Settings({ set, settings, onChange, onReset }: {
             onClick={() => onChange({ ...settings, showNumber: !settings.showNumber })} />
         </div>
       </div>
+      {account}
       <div className="card">
         <h2>Dados</h2>
         <div className="row">

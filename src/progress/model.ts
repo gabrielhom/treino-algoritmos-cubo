@@ -12,6 +12,8 @@ export interface Attempt {
   recognition_ms: number;
   rating: Rating;
   created_at: string; // ISO
+  /** Local-only: already stored on the server. Never sent. */
+  synced?: boolean;
 }
 
 export interface CaseState {
