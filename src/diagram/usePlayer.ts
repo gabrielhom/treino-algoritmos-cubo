@@ -29,11 +29,12 @@ export function usePlayer(initial: State) {
 
   const step = useCallback(() => {
     const move = queue.current.shift();
-    if (!move) { setPlaying(false); setAnim(null); return; }
+    if (!move) { frame.current = null; setPlaying(false); setAnim(null); return; }
     const duration = move.endsWith('2') ? QUARTER_MS * 1.5 : QUARTER_MS;
     const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
+    // Own clock: the rAF timestamp is not guaranteed to share performance.now()'s origin.
+    const tick = () => {
+      const t = Math.min(1, Math.max(0, (performance.now() - start) / duration));
       setAnim({ move, t });
       if (t < 1) { frame.current = requestAnimationFrame(tick); return; }
       stateRef.current = applyMove(stateRef.current, move);
