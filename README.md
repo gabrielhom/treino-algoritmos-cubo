@@ -1,6 +1,6 @@
 # Treino de algoritmos de cubo mágico
 
-Treino de reconhecimento de casos de F2L (41), OLL (57) e PLL (21): o app mostra um caso, você monta no cubo, resolve, confere a solução e avalia. Casos difíceis voltam mais vezes. Funciona sem login, neste navegador; com login por e-mail, o progresso sincroniza entre celular e PC. É um PWA: dá para instalar na tela inicial do celular e usar offline.
+Treino de reconhecimento de casos de F2L (41), OLL (57) e PLL (21): o app mostra um caso em 3D, você monta no cubo, resolve, confere a solução (com animação, se quiser) e avalia. A aba "Como usar" tem cada movimento da notação animado. Casos difíceis voltam mais vezes. Funciona sem login, neste navegador; com login por e-mail, o progresso sincroniza entre celular e PC. É um PWA: dá para instalar na tela inicial do celular e usar offline.
 
 ## Rodar local
 
@@ -20,7 +20,7 @@ Sem variáveis de ambiente o app roda em modo offline: tudo fica em IndexedDB no
 | `src/engine/` | motor de cubo por facelets (54 adesivos, tabelas de permutação, inversão, espelho) |
 | `src/sets/` | conjuntos de algoritmos: `f2l/`, `oll/`, `pll/`. Cada um exporta um `AlgSet`; `validate.ts` é a validação comum, `ll.ts` tem helpers de última camada |
 | `src/trainer/` | sorteio ponderado, construção do caso, hook do treino |
-| `src/diagram/` | SVGs (vista de cima com tiras e painel frente/lado) |
+| `src/diagram/` | cubo 3D em SVG (`cube3d.ts`: 26 cubies, câmera ortográfica, animação de giro de camada) e vista de cima com tiras |
 | `src/progress/` | modelo de tentativas, IndexedDB, estatísticas |
 | `src/sync/` | cliente Supabase, sincronização, auth |
 | `src/ui/` | telas |

@@ -34,8 +34,10 @@ describe('App', () => {
     expect(Number($('.caselabel b').textContent)).toBeGreaterThanOrEqual(1);
     expect(Number($('.caselabel b').textContent)).toBeLessThanOrEqual(4);
     expect($$('.mv').length).toBeGreaterThan(0);
-    expect($$('svg').length).toBe(2);
-    expect($$('svg rect').length).toBe(21 + 18);
+    expect($$('svg').length).toBe(2); // 3D + top view
+    expect($$('svg rect').length).toBe(21);
+    expect($$('svg polygon').length).toBeGreaterThan(27);
+    expect($$('.dgl')[0].textContent).toBe('cima · frente · direita');
     expect($('.solution')).toBeNull();
   });
 
@@ -99,7 +101,7 @@ describe('App', () => {
     await click(byText('Treinar'));
     await click(byText('Próximo'));
     expect($('.caselabel b').textContent).toBe('?');
-    expect($$('.dgl')[1].textContent).toBe('esquerda · frente');
+    expect($$('.dgl')[0].textContent).toBe('cima · frente · esquerda');
     const saved = JSON.parse(localStorage.getItem('cube-trainer:settings')!);
     expect(saved.sets.f2l).toMatchObject({ slot: 'L', showNumber: false });
     expect(saved.sets.f2l.groups).toHaveLength(9);
@@ -108,7 +110,7 @@ describe('App', () => {
   it('switches sets from the header and keeps per-set settings', async () => {
     await click(byText('OLL'));
     expect($('header .sub').textContent).toBe('2 de 57 casos no sorteio');
-    expect($$('svg').length).toBe(1); // top view only
+    expect($$('.dgl').map((d) => d.textContent)).toEqual(['cima · frente · direita', 'visto de cima']);
     expect($$('.mv.auf').length).toBe(0);
     await click(byText('Ajustes'));
     expect(byText('esquerda')).toBeUndefined(); // no slot control for OLL

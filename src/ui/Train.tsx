@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Diagram } from '../diagram/Diagram';
+import { usePlayer } from '../diagram/usePlayer';
+import { parse, SOLVED } from '../engine/cube';
 import type { CaseState, Rating } from '../progress/model';
 import { displaySolution, type ActiveCase, type SetSettings } from '../trainer/trainer';
 
@@ -16,6 +18,10 @@ export function Train({ active, settings, caseState, onRate }: {
   useEffect(() => {
     if (revealed) setTimeout(() => solutionRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }), 30);
   }, [revealed]);
+  const player = usePlayer(active?.state ?? SOLVED);
+  const caseState_ = active?.state;
+  const reset = player.reset;
+  useEffect(() => { if (caseState_) reset(caseState_); }, [caseState_, reset]);
 
   if (!active) {
     return (
@@ -31,7 +37,7 @@ export function Train({ active, settings, caseState, onRate }: {
   }
 
   const { set } = active;
-  const relevant = set.relevantStickers(active.state, { mirrored: active.mirrored });
+  const relevant = set.relevantStickers(player.state, { mirrored: active.mirrored });
   const label = settings.showNumber ? `${active.case.id}${active.mirrored ? ' (esq.)' : ''}` : '?';
   const avg = caseState && caseState.seen_count
     ? ` · sua média ${fmtS(caseState.total_ms / caseState.seen_count)} s em ${caseState.seen_count}x`
@@ -45,7 +51,7 @@ export function Train({ active, settings, caseState, onRate }: {
           <span>Caso <b>{label}</b></span>
           <span>{settings.showNumber ? set.groups[active.case.group] : ''}</span>
         </div>
-        <Diagram state={active.state} relevant={relevant} view={set.view} mirrored={active.mirrored} />
+        <Diagram state={player.state} relevant={relevant} view={set.view} mirrored={active.mirrored} anim={player.anim} />
         <div className="scramble">
           <div className="lbl">Aplique no cubo montado:</div>
           <div className="moves">
@@ -55,6 +61,12 @@ export function Train({ active, settings, caseState, onRate }: {
         {active.revealed && (
           <div className="solution" ref={solutionRef}>
             <div className="alg">{displaySolution(active, active.solution)}</div>
+            <div className="chips" style={{ marginTop: 8 }}>
+              <button className="chip" disabled={player.playing} onClick={() => { player.reset(active.state); player.play(parse(displaySolution(active, active.solution))); }}>
+                {player.playing ? 'animando…' : 'ver animado'}
+              </button>
+              <button className="chip" onClick={() => player.reset(active.state)}>voltar ao caso</button>
+            </div>
             <div className="alt">
               {active.alts.length > 0 && (
                 <>Também: {active.alts.map((a, i) => (

@@ -1,6 +1,8 @@
 // SVG diagrams ported from the prototype: top view with side strips, plus a
 // front/side panel for the F2L view.
 import { FACES, PIECE, faceOf, findSticker, type Face, type State } from '../engine/cube';
+import { Cube3D } from './Cube3D';
+import type { Anim } from './cube3d';
 
 const COLOR: Record<Face, string> = {
   U: 'var(--cU)', R: 'var(--cR)', F: 'var(--cF)', D: 'var(--cD)', L: 'var(--cL)', B: 'var(--cB)',
@@ -8,11 +10,12 @@ const COLOR: Record<Face, string> = {
 
 const isTopPiece = (k: number) => PIECE[k][1] === 1 && !(PIECE[k][0] === 0 && PIECE[k][2] === 0);
 
-function fill(state: State, k: number, relevant: Set<number>): string {
+export function stickerFill(state: State, k: number, relevant: Set<number>): string {
   const origin = state[k];
   if (!relevant.has(k) && isTopPiece(origin)) return 'var(--cX)';
   return COLOR[faceOf(origin)];
 }
+const fill = stickerFill;
 
 interface RectProps {
   x: number; y: number; w: number; h: number; k: number;
@@ -70,21 +73,20 @@ export function FrontView({ state, relevant, mirrored }: { state: State; relevan
   );
 }
 
-export function Diagram({ state, relevant, view, mirrored }: {
-  state: State; relevant: Set<number>; view: 'f2l' | 'll'; mirrored: boolean;
+/** 3D view (top, front and the slot side) plus the flat top view with side strips. */
+export function Diagram({ state, relevant, mirrored, anim = null }: {
+  state: State; relevant: Set<number>; view: 'f2l' | 'll'; mirrored: boolean; anim?: Anim | null;
 }) {
   return (
     <div className="diagram">
       <div>
+        <Cube3D state={state} relevant={relevant} mirrored={mirrored} anim={anim} size={230} />
+        <div className="dgl">{mirrored ? 'cima · frente · esquerda' : 'cima · frente · direita'}</div>
+      </div>
+      <div>
         <TopView state={state} relevant={relevant} />
         <div className="dgl">visto de cima</div>
       </div>
-      {view === 'f2l' && (
-        <div>
-          <FrontView state={state} relevant={relevant} mirrored={mirrored} />
-          <div className="dgl">{mirrored ? 'esquerda · frente' : 'frente · direita'}</div>
-        </div>
-      )}
     </div>
   );
 }

@@ -88,3 +88,14 @@ th.sortable{cursor:pointer;user-select:none} th.sortable.on{color:var(--ink)}
 .input:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
 /* set selector */
 header{flex-wrap:wrap} header .seg{margin-right:auto}
+/* 3D cube and moves */
+:root{--plastic:#1d1e23} :root[data-theme="dark"]{--plastic:#0b0c0f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--plastic:#0b0c0f}}
+.cube3d{display:block;max-width:100%;height:auto}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.moves-stage{display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center;margin:6px 0 10px}
+.moves-side{flex:1 1 160px;min-width:150px}
+.moves-last{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:34px;font-weight:650;line-height:1.1}
+.moves-family{margin-top:14px} .moves-family>.t{font-size:15px;font-weight:650} .moves-family>.d{font-size:13px;color:var(--ink-2);margin-bottom:4px}
+.moves-family .row .seg button{min-width:40px;padding:7px 8px}
+.chip:disabled{opacity:.5;cursor:default}

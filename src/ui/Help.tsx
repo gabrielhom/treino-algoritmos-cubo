@@ -1,8 +1,10 @@
 import type { AlgSet } from '../sets/types';
+import { Moves } from './Moves';
 
 export function Help({ set }: { set: AlgSet }) {
   return (
     <section>
+      <Moves />
       <div className="card help">
         <h2>O ciclo</h2>
         <ol>
