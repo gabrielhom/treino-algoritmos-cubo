@@ -1,15 +1,18 @@
 // Sync of attempts with Supabase. Attempts are append-only, so there are no conflicts:
 // push what the server has not seen, pull what this device has not seen.
-import type { Attempt } from '../progress/model';
+import { mergeMarks, type Attempt, type CaseMark } from '../progress/model';
 import type { AttemptStore } from '../progress/store';
 
 export type RemoteRow = Omit<Attempt, 'synced' | 'user_id'> & { user_id: string; synced_at?: string };
+export type RemoteMark = Omit<CaseMark, 'synced' | 'user_id' | 'key'> & { user_id: string };
 
 /** Minimal slice of the Supabase client the sync needs (keeps tests free of network). */
 export interface SyncClient {
   upsert(rows: RemoteRow[]): Promise<void>;
   /** Rows stored on the server after `cursor` (server-side synced_at), oldest first, at most `limit`. */
   fetchAfter(userId: string, cursor: string | null, limit: number): Promise<RemoteRow[]>;
+  upsertMarks(rows: RemoteMark[]): Promise<void>;
+  fetchMarks(userId: string): Promise<RemoteMark[]>;
 }
 
 export const BATCH = 500;
@@ -26,6 +29,13 @@ export function fromRow(r: RemoteRow): Attempt {
   return { ...rest, synced: true };
 }
 
+export function markToRow(m: CaseMark, userId: string): RemoteMark {
+  return { user_id: userId, set_id: m.set_id, case_id: m.case_id, status: m.status, updated_at: m.updated_at };
+}
+export function markFromRow(r: RemoteMark): CaseMark {
+  return { key: `${r.set_id}/${r.case_id}`, user_id: r.user_id, set_id: r.set_id, case_id: r.case_id, status: r.status, updated_at: r.updated_at, synced: true };
+}
+
 /** Adds remote attempts missing locally and marks local copies of known ones as synced. */
 export function mergeRemote(local: Attempt[], remote: Attempt[]): { merged: Attempt[]; changed: Attempt[] } {
   const byId = new Map(local.map((a) => [a.id, a]));
@@ -40,15 +50,31 @@ export function mergeRemote(local: Attempt[], remote: Attempt[]): { merged: Atte
 
 export interface SyncResult {
   attempts: Attempt[];
+  marks: CaseMark[];
   cursor: string | null;
   pushed: number;
   pulled: number;
+}
+
+/** Marks are few (one per case): pull all, newest wins, then push the local ones that survived. */
+export async function syncMarks(client: SyncClient, store: AttemptStore, marks: CaseMark[], userId: string): Promise<CaseMark[]> {
+  const remote = (await client.fetchMarks(userId)).map(markFromRow);
+  const { merged, changed } = mergeMarks(marks, remote);
+  await store.putMarks(changed);
+  const pending = merged.filter((m) => !m.synced);
+  if (!pending.length) return merged;
+  await client.upsertMarks(pending.map((m) => markToRow(m, userId)));
+  const marked = pending.map((m) => ({ ...m, user_id: userId, synced: true }));
+  await store.putMarks(marked);
+  const byKey = new Map(marked.map((m) => [m.key, m]));
+  return merged.map((m) => byKey.get(m.key) ?? m);
 }
 
 export async function syncOnce(
   client: SyncClient,
   store: AttemptStore,
   attempts: Attempt[],
+  marks: CaseMark[],
   userId: string,
   cursor: string | null,
 ): Promise<SyncResult> {
@@ -76,5 +102,6 @@ export async function syncOnce(
     next = rows[rows.length - 1].synced_at ?? next;
     if (rows.length < BATCH) break;
   }
-  return { attempts: current, cursor: next, pushed: pending.length, pulled };
+  const mergedMarks = await syncMarks(client, store, marks, userId);
+  return { attempts: current, marks: mergedMarks, cursor: next, pushed: pending.length, pulled };
 }

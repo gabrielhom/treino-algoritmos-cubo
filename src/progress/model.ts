@@ -16,6 +16,33 @@ export interface Attempt {
   synced?: boolean;
 }
 
+export type MarkStatus = 'learning' | 'known';
+
+/** Manual status the user gives a case. status null = cleared (kept so the clearing syncs). */
+export interface CaseMark {
+  key: string; // `${set_id}/${case_id}`
+  user_id: string | null;
+  set_id: string;
+  case_id: string;
+  status: MarkStatus | null;
+  updated_at: string;
+  synced?: boolean;
+}
+
+/** Newer wins, per case. */
+export function mergeMarks(local: CaseMark[], incoming: CaseMark[]): { merged: CaseMark[]; changed: CaseMark[] } {
+  const byKey = new Map(local.map((m) => [m.key, m]));
+  const changed: CaseMark[] = [];
+  for (const m of incoming) {
+    const cur = byKey.get(m.key);
+    if (!cur || m.updated_at > cur.updated_at || (m.updated_at === cur.updated_at && !cur.synced && m.synced)) {
+      byKey.set(m.key, m);
+      changed.push(m);
+    }
+  }
+  return { merged: [...byKey.values()], changed };
+}
+
 export interface CaseState {
   set_id: string;
   case_id: string;

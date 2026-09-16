@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { AlgSet } from '../sets/types';
-import type { SetSettings, Slot } from '../trainer/trainer';
+import { isRealistic, type SetSettings, type Slot } from '../trainer/trainer';
 
 function groupRange(set: AlgSet, g: number): string {
   const ids = set.cases.filter((c) => c.group === g).map((c) => c.id);
@@ -51,6 +51,13 @@ export function Settings({ set, settings, onChange, onReset, account }: {
                 </button>
               ))}
             </div>
+          </div>
+        )}
+        {set.setupMoves && (
+          <div className="row">
+            <div><div className="t">Embaralhar o resto da camada de cima</div><div className="d">O caso fica igual, mas o cubo parece um solve de verdade e a sequência deixa de ser só o inverso da solução</div></div>
+            <button className={`switch${isRealistic(settings) ? ' on' : ''}`} role="switch" aria-checked={isRealistic(settings)} aria-label="Embaralhar o resto"
+              onClick={() => onChange({ ...settings, realistic: !isRealistic(settings) })} />
           </div>
         )}
         <div className="row">

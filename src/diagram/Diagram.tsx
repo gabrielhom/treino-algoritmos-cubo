@@ -34,7 +34,7 @@ function Sticker({ x, y, w, h, k, state, relevant }: RectProps & { state: State;
   );
 }
 
-export function TopView({ state, relevant }: { state: State; relevant: Set<number> }) {
+export function TopView({ state, relevant, size = 190 }: { state: State; relevant: Set<number>; size?: number }) {
   const S = 34, g = 3, o = 34;
   const rects: RectProps[] = [];
   for (let j = 0; j < 3; j++) {
@@ -50,7 +50,7 @@ export function TopView({ state, relevant }: { state: State; relevant: Set<numbe
   for (let i = 0; i < 3; i++)
     for (let j = 0; j < 3; j++) rects.push({ k: i * 3 + j, x: o + j * (S + g), y: o + i * (S + g), w: S, h: S });
   return (
-    <svg viewBox="0 0 170 170" width="190" height="190" aria-label="Vista de cima">
+    <svg viewBox="0 0 170 170" width={size} height={size} aria-label="Vista de cima">
       {rects.map((r) => <Sticker key={r.k} {...r} state={state} relevant={relevant} />)}
     </svg>
   );

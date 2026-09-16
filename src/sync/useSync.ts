@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import type { Attempt } from '../progress/model';
+import type { Attempt, CaseMark } from '../progress/model';
 import type { AttemptStore } from '../progress/store';
 import { supabase } from './supabase';
-import { syncOnce, type RemoteRow, type SyncClient } from './sync';
+import { syncOnce, type RemoteMark, type RemoteRow, type SyncClient } from './sync';
 
 export interface SyncStatus {
   configured: boolean;
@@ -28,6 +28,15 @@ function makeClient(sb: NonNullable<typeof supabase>): SyncClient {
       if (error) throw error;
       return (data ?? []) as RemoteRow[];
     },
+    async upsertMarks(rows: RemoteMark[]) {
+      const { error } = await sb.from('case_marks').upsert(rows, { onConflict: 'user_id,set_id,case_id' });
+      if (error) throw error;
+    },
+    async fetchMarks(userId) {
+      const { data, error } = await sb.from('case_marks').select('*').eq('user_id', userId);
+      if (error) throw error;
+      return (data ?? []) as RemoteMark[];
+    },
   };
 }
 const client: SyncClient | null = supabase ? makeClient(supabase) : null;
@@ -36,6 +45,8 @@ export function useSync(
   storeRef: React.RefObject<AttemptStore | null>,
   attemptsRef: React.RefObject<Attempt[]>,
   setAttempts: (a: Attempt[]) => void,
+  marksRef: React.RefObject<CaseMark[]>,
+  setMarks: (m: CaseMark[]) => void,
 ) {
   const [status, setStatus] = useState<SyncStatus>({
     configured: !!supabase, session: null, syncing: false,
@@ -57,18 +68,19 @@ export function useSync(
     setStatus((s) => ({ ...s, syncing: true, error: null }));
     try {
       const cursor = localStorage.getItem(cursorKey(userId));
-      const r = await syncOnce(client, storeRef.current, attemptsRef.current, userId, cursor);
+      const r = await syncOnce(client, storeRef.current, attemptsRef.current, marksRef.current, userId, cursor);
       if (r.cursor) localStorage.setItem(cursorKey(userId), r.cursor);
       const now = new Date().toISOString();
       localStorage.setItem('cube-trainer:last-sync', now);
       setAttempts(r.attempts);
+      setMarks(r.marks);
       setStatus((s) => ({ ...s, syncing: false, lastSyncAt: now }));
     } catch (e) {
       setStatus((s) => ({ ...s, syncing: false, error: (e as Error).message ?? 'erro ao sincronizar' }));
     } finally {
       busy.current = false;
     }
-  }, [status.session, storeRef, attemptsRef, setAttempts]);
+  }, [status.session, storeRef, attemptsRef, setAttempts, marksRef, setMarks]);
 
   // Sync on login and whenever the device comes back online.
   useEffect(() => {

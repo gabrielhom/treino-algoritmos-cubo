@@ -10,10 +10,13 @@ export interface SetSettings {
   slot: Slot;
   auf: boolean;
   showNumber: boolean;
+  /** Scramble the pieces the set ignores, so the cube looks like a real solve. */
+  realistic?: boolean;
 }
 
 // Shared frozen default: a stable identity keeps effects keyed on settings from re-firing.
-export const DEFAULT_SETTINGS: SetSettings = Object.freeze({ groups: [0], slot: 'R', auf: false, showNumber: true }) as SetSettings;
+export const DEFAULT_SETTINGS: SetSettings = Object.freeze({ groups: [0], slot: 'R', auf: false, showNumber: true, realistic: true }) as SetSettings;
+export const isRealistic = (s: SetSettings) => s.realistic !== false;
 
 export interface ActiveCase {
   set: AlgSet;
@@ -22,6 +25,8 @@ export interface ActiveCase {
   solution: string[];
   alts: string[][];
   scramble: string[];
+  /** Number of leading scramble moves that only mess up ignored pieces. */
+  setupLength: number;
   preAuf: string | null;
   postAuf: string | null;
   state: State;
@@ -79,9 +84,11 @@ export function buildCase(set: AlgSet, c: AlgCase, settings: SetSettings, forceS
       scramble = [preAuf, ...scramble];
     }
   }
+  const setup = isRealistic(settings) && set.setupMoves ? set.setupMoves(rand) : [];
+  scramble = [...setup, ...scramble];
   const state = normalizeOrientation(apply(SOLVED, scramble));
   return {
-    set, case: c, mirrored, solution, alts, scramble, preAuf, postAuf, state,
+    set, case: c, mirrored, solution, alts, scramble, setupLength: setup.length, preAuf, postAuf, state,
     startedAt: performance.now(), revealed: false, elapsedMs: 0,
   };
 }

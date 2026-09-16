@@ -1,20 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SETS, getSet } from '../sets';
-import { foldCaseStates, newId, statesForSet, type Attempt } from '../progress/model';
+import { foldCaseStates, newId, statesForSet, type Attempt, type CaseMark, type MarkStatus } from '../progress/model';
 import { loadSettings, openAttemptStore, saveSettings, settingsFor, type AppSettings, type AttemptStore } from '../progress/store';
 import { useTrainer, type AttemptInput } from '../trainer/useTrainer';
 import { selectedCases, type SetSettings } from '../trainer/trainer';
 import { pendingOf } from '../sync/sync';
 import { useSync } from '../sync/useSync';
 import { Train } from './Train';
+import { Browse } from './Browse';
 import { Progress } from './Progress';
 import { Settings } from './Settings';
 import { Account } from './Account';
 import { Help } from './Help';
 
-type View = 'train' | 'progress' | 'settings' | 'help';
+type View = 'train' | 'browse' | 'progress' | 'settings' | 'help';
 const VIEWS: { id: View; label: string }[] = [
-  { id: 'train', label: 'Treinar' }, { id: 'progress', label: 'Progresso' }, { id: 'settings', label: 'Ajustes' }, { id: 'help', label: 'Como usar' },
+  { id: 'train', label: 'Treinar' }, { id: 'browse', label: 'Casos' }, { id: 'progress', label: 'Progresso' }, { id: 'settings', label: 'Ajustes' }, { id: 'help', label: 'Como usar' },
 ];
 
 export function App() {
@@ -23,13 +24,17 @@ export function App() {
   const [attempts, setAttemptsState] = useState<Attempt[]>([]);
   const attemptsRef = useRef<Attempt[]>([]);
   const setAttempts = useCallback((list: Attempt[]) => { attemptsRef.current = list; setAttemptsState(list); }, []);
+  const [marks, setMarksState] = useState<CaseMark[]>([]);
+  const marksRef = useRef<CaseMark[]>([]);
+  const setMarks = useCallback((list: CaseMark[]) => { marksRef.current = list; setMarksState(list); }, []);
   const [focus, setFocus] = useState<Set<string | number> | null>(null);
   const storeRef = useRef<AttemptStore | null>(null);
   useEffect(() => {
-    openAttemptStore().then(async (s) => { storeRef.current = s; setAttempts(await s.load()); });
-  }, [setAttempts]);
+    openAttemptStore().then(async (s) => { storeRef.current = s; setAttempts(await s.load()); setMarks(await s.loadMarks()); });
+  }, [setAttempts, setMarks]);
 
-  const { status: syncStatus, sync, signIn, signOut } = useSync(storeRef, attemptsRef, setAttempts);
+  const { status: syncStatus, sync, signIn, signOut } = useSync(storeRef, attemptsRef, setAttempts, marksRef, setMarks);
+  const marksByKey = useMemo(() => new Map(marks.map((m) => [m.key, m])), [marks]);
 
   const set = getSet(app.setId);
   const settings = settingsFor(app, set.id);
@@ -82,6 +87,14 @@ export function App() {
     if (c) { trainer.start(c); setView('train'); }
   };
   const focusOn = (ids: (string | number)[]) => { setFocus(new Set(ids)); setView('train'); };
+  const mark = (id: string | number, status: MarkStatus | null) => {
+    const m: CaseMark = {
+      key: `${set.id}/${id}`, user_id: syncStatus.session?.user.id ?? null, set_id: set.id, case_id: String(id),
+      status, updated_at: new Date().toISOString(), synced: false,
+    };
+    setMarks([...marksRef.current.filter((x) => x.key !== m.key), m]);
+    void storeRef.current?.putMarks([m]).then(() => { if (syncStatus.session) void sync(); });
+  };
 
   return (
     <div className="app">
@@ -111,6 +124,9 @@ export function App() {
           )}
           <Train active={active} settings={settings} caseState={active ? caseStates.get(active.case.id) : undefined} onRate={rate} />
         </>
+      )}
+      {view === 'browse' && (
+        <Browse set={set} marks={marksByKey} progress={caseStates} onTrain={trainCase} onFocus={focusOn} onMark={mark} />
       )}
       {view === 'progress' && (
         <Progress set={set} settings={settings} attempts={attempts} caseStates={caseStates} onTrain={trainCase} onFocus={focusOn} />

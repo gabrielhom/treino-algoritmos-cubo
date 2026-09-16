@@ -99,3 +99,15 @@ header{flex-wrap:wrap} header .seg{margin-right:auto}
 .moves-family{margin-top:14px} .moves-family>.t{font-size:15px;font-weight:650} .moves-family>.d{font-size:13px;color:var(--ink-2);margin-bottom:4px}
 .moves-family .row .seg button{min-width:40px;padding:7px 8px}
 .chip:disabled{opacity:.5;cursor:default}
+/* cases browser */
+.tabs{overflow-x:auto;scrollbar-width:none} .tabs::-webkit-scrollbar{display:none}
+.tab{padding:9px 2px;font-size:12.5px}
+.filters{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.filter>.mini{display:block;margin-bottom:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:12px}
+.grid .card{margin-top:0}
+.casecard .thumb{display:flex;justify-content:center;margin:2px 0 6px}
+.casecard .alg{font-size:14px;font-weight:600;word-break:break-word}
+.casecard.known{border-color:var(--ok)} .casecard.learning{border-color:var(--warn)}
+.casecard .seg button{padding:6px 9px;font-size:13px}
+.empty{grid-column:1/-1}

@@ -1,6 +1,6 @@
 // Local persistence. Attempts go to IndexedDB, with localStorage as fallback;
 // settings always live in localStorage.
-import type { Attempt } from './model';
+import type { Attempt, CaseMark } from './model';
 import { DEFAULT_SETTINGS, type SetSettings } from '../trainer/trainer';
 
 export interface AttemptStore {
@@ -8,9 +8,12 @@ export interface AttemptStore {
   add(a: Attempt): Promise<void>;
   addMany(list: Attempt[]): Promise<void>;
   clear(): Promise<void>;
+  loadMarks(): Promise<CaseMark[]>;
+  putMarks(list: CaseMark[]): Promise<void>;
 }
 
 const ATTEMPTS_KEY = 'cube-trainer:attempts';
+const MARKS_KEY = 'cube-trainer:marks';
 
 export const localAttemptStore: AttemptStore = {
   async load() {
@@ -31,6 +34,18 @@ export const localAttemptStore: AttemptStore = {
   },
   async clear() {
     localStorage.removeItem(ATTEMPTS_KEY);
+  },
+  async loadMarks() {
+    try {
+      return JSON.parse(localStorage.getItem(MARKS_KEY) ?? '[]') as CaseMark[];
+    } catch {
+      return [];
+    }
+  },
+  async putMarks(list) {
+    const byKey = new Map((await this.loadMarks()).map((m) => [m.key, m]));
+    for (const m of list) byKey.set(m.key, m);
+    localStorage.setItem(MARKS_KEY, JSON.stringify([...byKey.values()]));
   },
 };
 

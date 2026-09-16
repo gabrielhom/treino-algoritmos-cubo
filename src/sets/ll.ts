@@ -52,6 +52,16 @@ export function homeCounts(state: State): { corners: number; edges: number } {
 
 export const inTopLayerScope = (k: number) => inTopLayer(k);
 
+const FACE_MOVES_ONLY = /^[RLUDFB'2 ]+$/;
+const AUFS = ['', 'U', 'U2', "U'"];
+/** One random alg from the pool (face moves only, so the cube is not rotated) between random AUFs. */
+export function randomSetup(pool: string[], rand: () => number): string[] {
+  const algs = pool.filter((a) => FACE_MOVES_ONLY.test(a));
+  const pick = <T,>(xs: T[]) => xs[Math.floor(rand() * xs.length)];
+  const alg = pick(algs);
+  return [pick(AUFS), ...alg.split(' '), pick(AUFS)].filter(Boolean);
+}
+
 export const LL_HELP_STEPS = [
   'Cubo montado na mão, amarelo em cima, verde na frente.',
   'Aplique a sequência mostrada. As duas primeiras camadas continuam prontas; só a de cima muda.',

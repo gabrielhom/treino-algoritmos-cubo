@@ -32,4 +32,16 @@ export interface AlgSet {
   inScope(position: number, opts: StickerOpts): boolean;
   /** Texts for the "Como usar" tab. Steps may contain <b> tags. */
   help: { steps: string[]; note: string; reading: string[] };
+  /** Random moves that change only what this set ignores (e.g. the rest of the last layer for F2L). */
+  setupMoves?(rand: () => number): string[];
+  /** Filters for the case browser, evaluated on the case state (no AUF, right slot). */
+  filters?: CaseFilter[];
+}
+
+export interface CaseFilter {
+  id: string;
+  label: string;
+  options: { id: string; label: string }[];
+  /** Option id that describes this state. */
+  classify(state: State): string;
 }

@@ -1,5 +1,8 @@
-import { PIECE_KEY, inTopLayer } from '../../engine/cube';
-import type { AlgSet, StickerOpts } from '../types';
+import { PIECE_KEY, faceOf, findSticker, inTopLayer, type State } from '../../engine/cube';
+import type { AlgSet, CaseFilter, StickerOpts } from '../types';
+import { randomSetup } from '../ll';
+import { CASES as OLL_CASES } from '../oll';
+import { CASES as PLL_CASES } from '../pll';
 import { CASES, GROUPS } from './cases';
 
 // DFR corner + FR edge (right slot) and their mirror (left slot).
@@ -8,6 +11,38 @@ const PAIR_L = new Set(['-1,-1,1', '-1,0,1']);
 export const pairKeys = (mirrored: boolean) => (mirrored ? PAIR_L : PAIR_R);
 
 const isPairPosition = (k: number, opts: StickerOpts) => pairKeys(opts.mirrored).has(PIECE_KEY[k]);
+
+// Where is the white sticker of the DFR corner, and where is the FR edge? (right slot, no AUF)
+const CORNER_WHITE = findSticker('D', 2, -3, 2);
+const EDGE_F = findSticker('F', 2, 0, 3);
+function locate(state: State, sticker: number): number {
+  return state.indexOf(sticker);
+}
+const cornerFilter: CaseFilter = {
+  id: 'corner',
+  label: 'Canto',
+  options: [
+    { id: 'up-white-up', label: 'em cima, branco para cima' },
+    { id: 'up-white-side', label: 'em cima, branco de lado' },
+    { id: 'slot', label: 'no slot' },
+  ],
+  classify(state) {
+    const k = locate(state, CORNER_WHITE);
+    if (!inTopLayer(k)) return 'slot';
+    return faceOf(k) === 'U' ? 'up-white-up' : 'up-white-side';
+  },
+};
+const edgeFilter: CaseFilter = {
+  id: 'edge',
+  label: 'Aresta',
+  options: [
+    { id: 'up', label: 'em cima' },
+    { id: 'slot', label: 'no slot' },
+  ],
+  classify(state) {
+    return inTopLayer(locate(state, EDGE_F)) ? 'up' : 'slot';
+  },
+};
 
 export const f2l: AlgSet = {
   id: 'f2l',
@@ -32,6 +67,9 @@ export const f2l: AlgSet = {
   inScope(k, opts) {
     return inTopLayer(k) || isPairPosition(k, opts);
   },
+  // Any last-layer alg leaves the cross and the four slots alone.
+  setupMoves: (rand) => randomSetup([...OLL_CASES, ...PLL_CASES].map((c) => c.alg), rand),
+  filters: [cornerFilter, edgeFilter],
   help: {
     steps: [
       'Cubo montado na mão, cruz branca embaixo, verde na frente.',

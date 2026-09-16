@@ -26,3 +26,24 @@ create policy "attempts: inserir as próprias" on public.attempts
   for insert with check (auth.uid() = user_id);
 
 -- Sem update nem delete: tentativas são append-only. case_state é derivado no cliente.
+
+-- Marcação manual por caso ("aprendendo" / "sei"). Uma linha por (usuário, conjunto, caso); a mais nova vence.
+create table if not exists public.case_marks (
+  user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  set_id     text not null,
+  case_id    text not null,
+  status     text check (status in ('learning', 'known')),
+  updated_at timestamptz not null,
+  primary key (user_id, set_id, case_id)
+);
+
+alter table public.case_marks enable row level security;
+
+create policy "case_marks: ler as próprias" on public.case_marks
+  for select using (auth.uid() = user_id);
+
+create policy "case_marks: inserir as próprias" on public.case_marks
+  for insert with check (auth.uid() = user_id);
+
+create policy "case_marks: atualizar as próprias" on public.case_marks
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);

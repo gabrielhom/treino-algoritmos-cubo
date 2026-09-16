@@ -126,6 +126,34 @@ describe('App', () => {
     expect(JSON.parse(localStorage.getItem('cube-trainer:settings')!).setId).toBe('f2l');
   });
 
+  it('cases tab: filters, marks and focus', async () => {
+    await click(byText('Casos'));
+    expect($$('.casecard').length).toBe(41);
+    await click(byText('no slot')); // corner in slot
+    const inSlot = $$('.casecard').length;
+    expect(inSlot).toBeGreaterThan(0);
+    expect(inSlot).toBeLessThan(41);
+    await click(byText('qualquer'));
+    expect($$('.casecard').length).toBe(41);
+    // mark case 1 as "aprendendo", persisted and reflected in the header
+    const card1 = $$('.casecard').find((c) => c.querySelector('b')!.textContent === '1')!;
+    await click([...card1.querySelectorAll('.seg button')].find((b) => b.textContent === 'aprendendo') as HTMLElement);
+    expect($('.card .t').textContent).toContain('1 aprendendo');
+    expect(JSON.parse(localStorage.getItem('cube-trainer:marks')!)[0]).toMatchObject({ set_id: 'f2l', case_id: '1', status: 'learning' });
+    await click(byText('treinar os que estou aprendendo'));
+    expect($('.caselabel b').textContent).toBe('1');
+    expect($('header .sub').textContent).toBe('só 1 casos');
+  });
+
+  it('realistic scramble is longer than the plain inverse and can be turned off', async () => {
+    const long = $$('.mv').length;
+    await click(byText('Ajustes'));
+    await click($('[aria-label="Embaralhar o resto"]'));
+    await click(byText('Treinar'));
+    await click(byText('Próximo'));
+    expect($$('.mv').length).toBeLessThan(long);
+  });
+
   it('"treinar" on the progress tab forces that case', async () => {
     await click(byText('Progresso'));
     const row = $$('tbody tr').find((r) => r.querySelector('b')!.textContent === '41')!;

@@ -27,4 +27,12 @@ describe('idbAttemptStore', () => {
     await idbAttemptStore.clear();
     expect(await idbAttemptStore.load()).toEqual([]);
   });
+  it('stores marks by key, upserting', async () => {
+    const mark = { key: 'f2l/1', user_id: null, set_id: 'f2l', case_id: '1', status: 'learning' as const, updated_at: '2026-09-16T10:00:00.000Z' };
+    await idbAttemptStore.putMarks([mark]);
+    await idbAttemptStore.putMarks([{ ...mark, status: 'known' }]);
+    const all = await idbAttemptStore.loadMarks();
+    expect(all).toHaveLength(1);
+    expect(all[0].status).toBe('known');
+  });
 });

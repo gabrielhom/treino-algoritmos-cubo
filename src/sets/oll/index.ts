@@ -3,7 +3,8 @@
 // Alternatives that assume another angle carry their AUF explicitly (found by simulation).
 import { faceOf, inTopLayer } from '../../engine/cube';
 import type { AlgCase, AlgSet } from '../types';
-import { LL_HELP_STEPS, allUYellow, inTopLayerScope } from '../ll';
+import { LL_HELP_STEPS, allUYellow, inTopLayerScope, randomSetup } from '../ll';
+import { CASES as PLL_CASES } from '../pll';
 
 export const GROUPS = [
   'T', 'P', 'Quadrado', 'C', 'W', 'Cruz', 'Cantos ok', 'Peixe', 'Raio', 'Cavalo', 'Sem forma', 'L pequeno', 'Linha', 'Raio pequeno', 'Ponto',
@@ -105,6 +106,8 @@ export const oll: AlgSet = {
   },
   isSolved: allUYellow,
   inScope: inTopLayerScope,
+  // A permutation of oriented pieces does not change the orientation pattern.
+  setupMoves: (rand) => randomSetup(PLL_CASES.map((c) => c.alg), rand),
   help: {
     steps: LL_HELP_STEPS,
     note: 'Se você errou e desmontou mais que a camada de cima, refaça o F2L antes de continuar.',
