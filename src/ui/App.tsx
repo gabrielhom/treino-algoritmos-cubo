@@ -19,7 +19,7 @@ const VIEWS: { id: View; label: string }[] = [
 ];
 
 export function App() {
-  const [view, setView] = useState<View>('train');
+  const [view, setView] = useState<View>('browse');
   const [app, setApp] = useState<AppSettings>(loadSettings);
   const [attempts, setAttemptsState] = useState<Attempt[]>([]);
   const attemptsRef = useRef<Attempt[]>([]);

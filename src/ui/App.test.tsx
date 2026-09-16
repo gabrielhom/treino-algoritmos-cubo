@@ -23,6 +23,8 @@ beforeEach(async () => {
   root = createRoot(host);
   await act(async () => { root.render(<App />); });
   await flush();
+  expect($('.tab.on').textContent).toBe('Casos'); // the app opens on the case browser
+  await click(byText('Treinar'));
 });
 afterEach(() => { act(() => root.unmount()); host.remove(); });
 
