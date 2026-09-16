@@ -15,7 +15,7 @@ import { Help } from './Help';
 
 type View = 'train' | 'browse' | 'progress' | 'settings' | 'help';
 const VIEWS: { id: View; label: string }[] = [
-  { id: 'train', label: 'Treinar' }, { id: 'browse', label: 'Casos' }, { id: 'progress', label: 'Progresso' }, { id: 'settings', label: 'Ajustes' }, { id: 'help', label: 'Como usar' },
+  { id: 'browse', label: 'Casos' }, { id: 'train', label: 'Treinar' }, { id: 'progress', label: 'Progresso' }, { id: 'settings', label: 'Ajustes' }, { id: 'help', label: 'Como usar' },
 ];
 
 export function App() {
