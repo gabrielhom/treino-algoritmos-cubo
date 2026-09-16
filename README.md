@@ -1,6 +1,6 @@
 # Treino de algoritmos de cubo mágico
 
-Treino de reconhecimento de casos de F2L (e, em breve, OLL e PLL): o app mostra um caso, você monta no cubo, resolve, confere a solução e avalia. Casos difíceis voltam mais vezes. Funciona sem login, neste navegador; com login por e-mail, o progresso sincroniza entre celular e PC.
+Treino de reconhecimento de casos de F2L (41), OLL (57) e PLL (21): o app mostra um caso, você monta no cubo, resolve, confere a solução e avalia. Casos difíceis voltam mais vezes. Funciona sem login, neste navegador; com login por e-mail, o progresso sincroniza entre celular e PC. É um PWA: dá para instalar na tela inicial do celular e usar offline.
 
 ## Rodar local
 
@@ -18,7 +18,7 @@ Sem variáveis de ambiente o app roda em modo offline: tudo fica em IndexedDB no
 | Pasta | O que tem |
 |---|---|
 | `src/engine/` | motor de cubo por facelets (54 adesivos, tabelas de permutação, inversão, espelho) |
-| `src/sets/` | conjuntos de algoritmos. Cada um em `src/sets/<id>/` exporta um `AlgSet`; `validate.ts` é a validação comum |
+| `src/sets/` | conjuntos de algoritmos: `f2l/`, `oll/`, `pll/`. Cada um exporta um `AlgSet`; `validate.ts` é a validação comum, `ll.ts` tem helpers de última camada |
 | `src/trainer/` | sorteio ponderado, construção do caso, hook do treino |
 | `src/diagram/` | SVGs (vista de cima com tiras e painel frente/lado) |
 | `src/progress/` | modelo de tentativas, IndexedDB, estatísticas |
@@ -58,7 +58,13 @@ Local: crie um `.env.local` com as duas. Na Vercel: **Settings → Environment V
 3. Adicione as duas variáveis de ambiente acima (se quiser sync).
 4. Deploy. Cada `git push` na branch principal gera um novo deploy.
 
-O `vercel.json` só redireciona qualquer rota para `index.html` (SPA).
+O `vercel.json` redireciona rotas para `index.html` (SPA), impede cache do `sw.js` e marca os assets com hash como imutáveis.
+
+### PWA
+
+`public/manifest.webmanifest` e `public/sw.js` são servidos como estão. O service worker guarda a casca do app e os assets com hash; navegações tentam a rede primeiro e caem no cache offline. Chamadas ao Supabase nunca são cacheadas. Ao publicar uma versão nova, o `sw.js` é buscado sem cache e troca o cache antigo na ativação.
+
+Ícones em `public/` foram gerados por script (quadrado 3×3 nas cores do cubo); troque à vontade.
 
 ## Convenções
 
