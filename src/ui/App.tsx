@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getSet } from '../sets';
+import { SETS, getSet } from '../sets';
 import { foldCaseStates, newId, statesForSet, type Attempt } from '../progress/model';
 import { loadSettings, openAttemptStore, saveSettings, settingsFor, type AppSettings, type AttemptStore } from '../progress/store';
 import { useTrainer, type AttemptInput } from '../trainer/useTrainer';
@@ -33,6 +33,12 @@ export function App() {
 
   const set = getSet(app.setId);
   const settings = settingsFor(app, set.id);
+  const selectSet = (id: string) => {
+    const nextApp = { ...app, setId: id };
+    setApp(nextApp);
+    saveSettings(nextApp);
+    setFocus(null);
+  };
   const updateSettings = (s: SetSettings) => {
     const nextApp = { ...app, sets: { ...app.sets, [set.id]: s } };
     setApp(nextApp);
@@ -80,7 +86,12 @@ export function App() {
   return (
     <div className="app">
       <header>
-        <h1>Treino {set.name}</h1>
+        <h1>Treino</h1>
+        <div className="seg" role="tablist" aria-label="Conjunto">
+          {SETS.map((s) => (
+            <button key={s.id} className={s.id === set.id ? 'on' : ''} onClick={() => selectSet(s.id)}>{s.name}</button>
+          ))}
+        </div>
         <span className="sub">
           {focus ? `só ${focus.size} casos` : `${selectedCases(set, settings).length} de ${set.cases.length} casos no sorteio`}
         </span>

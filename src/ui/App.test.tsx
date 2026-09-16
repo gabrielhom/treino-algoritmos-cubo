@@ -28,7 +28,8 @@ afterEach(() => { act(() => root.unmount()); host.remove(); });
 
 describe('App', () => {
   it('shows a case from group 0 with scramble and diagrams', () => {
-    expect($('header h1').textContent).toBe('Treino F2L');
+    expect($('header h1').textContent).toBe('Treino');
+    expect($('header .seg .on').textContent).toBe('F2L');
     expect($('header .sub').textContent).toBe('4 de 41 casos no sorteio');
     expect(Number($('.caselabel b').textContent)).toBeGreaterThanOrEqual(1);
     expect(Number($('.caselabel b').textContent)).toBeLessThanOrEqual(4);
@@ -102,6 +103,25 @@ describe('App', () => {
     const saved = JSON.parse(localStorage.getItem('cube-trainer:settings')!);
     expect(saved.sets.f2l).toMatchObject({ slot: 'L', showNumber: false });
     expect(saved.sets.f2l.groups).toHaveLength(9);
+  });
+
+  it('switches sets from the header and keeps per-set settings', async () => {
+    await click(byText('OLL'));
+    expect($('header .sub').textContent).toBe('2 de 57 casos no sorteio');
+    expect($$('svg').length).toBe(1); // top view only
+    expect($$('.mv.auf').length).toBe(0);
+    await click(byText('Ajustes'));
+    expect(byText('esquerda')).toBeUndefined(); // no slot control for OLL
+    await click($('[aria-label="Giro aleatório"]'));
+    await click(byText('Treinar'));
+    await click(byText('Próximo'));
+    expect($$('.mv.auf').length).toBe(2); // pre and post AUF
+    await click(byText('PLL'));
+    expect($('header .sub').textContent).toBe('3 de 21 casos no sorteio');
+    expect(['Aa', 'Ab', 'E']).toContain($('.caselabel b').textContent);
+    await click(byText('F2L'));
+    expect($('header .sub').textContent).toBe('4 de 41 casos no sorteio');
+    expect(JSON.parse(localStorage.getItem('cube-trainer:settings')!).setId).toBe('f2l');
   });
 
   it('"treinar" on the progress tab forces that case', async () => {
