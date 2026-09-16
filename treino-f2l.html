@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Treino F2L</title>
+<style>
+:root{
+  --bg:#f6f5f0; --surface:#ffffff; --ink:#17181c; --ink-2:#5b5f6b; --line:#e3e1d9; --line-2:#c9c6bb;
+  --accent:#17181c; --accent-ink:#ffffff; --soft:#ecebe4; --focus:#2563eb;
+  --cU:#f5d90a; --cD:#f4f4f4; --cF:#1aa64a; --cB:#2563eb; --cR:#e0262b; --cL:#f97b1c; --cX:#b8b6ae; --cXd:#8c8a83; --sticker-line:#17181c;
+  --ok:#1aa64a; --warn:#e0a10a; --bad:#e0262b;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121317; --surface:#1b1d23; --ink:#f1f1ec; --ink-2:#a3a6b1; --line:#2a2d36; --line-2:#3a3e4a;
+    --accent:#f1f1ec; --accent-ink:#121317; --soft:#23262e; --cD:#e8e8e8; --cX:#4b4e59; --cXd:#33363f; --sticker-line:#0c0d10;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121317; --surface:#1b1d23; --ink:#f1f1ec; --ink-2:#a3a6b1; --line:#2a2d36; --line-2:#3a3e4a;
+  --accent:#f1f1ec; --accent-ink:#121317; --soft:#23262e; --cD:#e8e8e8; --cX:#4b4e59; --cXd:#33363f; --sticker-line:#0c0d10;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+.app{max-width:560px;margin:0 auto;padding:14px 14px calc(96px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:6px 2px 14px}
+header h1{white-space:nowrap;font-size:20px;font-weight:650;letter-spacing:-.01em;margin:0}
+header .sub{color:var(--ink-2);font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card + .card{margin-top:12px}
+.diagram{display:flex;justify-content:center;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.diagram svg{display:block;max-width:100%;height:auto}
+.dgl{font-size:12px;color:var(--ink-2);text-align:center;margin-top:4px}
+.caselabel{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;font-size:14px;color:var(--ink-2)}
+.caselabel b{color:var(--ink);font-weight:650}
+.scramble{margin-top:14px}
+.scramble .lbl{font-size:13px;color:var(--ink-2);margin-bottom:6px}
+.moves{display:flex;flex-wrap:wrap;gap:8px}
+.mv{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:26px;font-weight:600;line-height:1;padding:10px 12px;border-radius:9px;background:var(--soft);min-width:44px;text-align:center}
+.mv.auf{background:transparent;border:1px dashed var(--line-2)}
+.solution{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.solution .alg{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:20px;font-weight:600;letter-spacing:.02em}
+.solution .alt{margin-top:8px;color:var(--ink-2);font-size:14px}
+.solution .alt code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px}
+.meta{font-size:13px;color:var(--ink-2);margin-top:8px}
+.rate{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.rate button{padding:12px 8px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
+.rate button.easy{border-color:var(--ok)} .rate button.mid{border-color:var(--warn)} .rate button.hard{border-color:var(--bad)}
+.rate button:active{transform:translateY(1px)}
+.actions{position:fixed;left:0;right:0;bottom:0;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--bg) 70%,transparent);display:flex;justify-content:center}
+.actions .in{width:100%;max-width:560px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{padding:15px 14px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font:inherit;font-size:16px;font-weight:650;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,.rate button:focus-visible,.chip:focus-visible,.tab:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tab{flex:1;padding:9px 4px;white-space:nowrap;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.tab.on{color:var(--ink);border-color:var(--ink)}
+.hidden{display:none !important}
+h2{font-size:15px;font-weight:650;margin:0 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 11px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);font:inherit;font-size:14px;cursor:pointer}
+.chip.on{background:var(--soft);color:var(--ink);border-color:var(--ink)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line)}
+.row>div:first-child{flex:1 1 180px}
+.row:first-of-type{border-top:0}
+.row .t{font-size:15px} .row .d{font-size:13px;color:var(--ink-2)}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:9px;overflow:hidden}
+.seg button{padding:7px 10px;border:0;background:var(--surface);color:var(--ink-2);font:inherit;font-size:14px;cursor:pointer}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.switch{width:46px;height:28px;border-radius:14px;background:var(--line-2);border:0;position:relative;cursor:pointer;flex:none}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .15s}
+.switch.on{background:var(--ink)} .switch.on::after{left:21px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;color:var(--ink-2);font-weight:600;font-size:12px;padding:6px 4px;border-bottom:1px solid var(--line)}
+td{padding:9px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.off td{opacity:.45}
+td .sc{display:inline-block;min-width:22px;text-align:center;padding:2px 6px;border-radius:6px;background:var(--soft);font-size:12px}
+td .sc.h{background:var(--bad);color:#fff}
+td button{font:inherit;font-size:13px;padding:5px 9px;border-radius:7px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);cursor:pointer}
+.help p{margin:0 0 8px;font-size:15px}
+.help ol{margin:0;padding-left:20px} .help li{margin:4px 0}
+.note{font-size:13px;color:var(--ink-2);margin-top:10px}
+.empty{color:var(--ink-2);text-align:center;padding:30px 10px}
+.mini{font-size:13px;color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <h1>Treino F2L</h1>
+  <span class="sub" id="hdr-sub">41 casos</span>
+</header>
+
+<div class="tabs">
+  <button class="tab on" data-view="train">Treinar</button>
+  <button class="tab" data-view="cases">Casos</button>
+  <button class="tab" data-view="settings">Ajustes</button>
+  <button class="tab" data-view="help">Como usar</button>
+</div>
+
+<section id="view-train">
+  <div class="card">
+    <div class="caselabel"><span>Caso <b id="case-num">–</b></span><span id="case-group"></span></div>
+    <div class="diagram">
+      <div><svg id="svg-top" viewBox="0 0 170 170" width="190" height="190" aria-label="Vista de cima"></svg><div class="dgl">visto de cima</div></div>
+      <div><svg id="svg-front" viewBox="0 0 206 104" width="206" height="104" aria-label="Frente e lado"></svg><div class="dgl" id="dgl-front">frente · direita</div></div>
+    </div>
+    <div class="scramble">
+      <div class="lbl">Aplique no cubo montado:</div>
+      <div class="moves" id="scramble"></div>
+    </div>
+    <div class="solution hidden" id="solution">
+      <div class="alg" id="sol-alg"></div>
+      <div class="alt" id="sol-alt"></div>
+      <div class="meta" id="sol-meta"></div>
+      <div class="rate">
+        <button class="easy" data-rate="easy">Fácil</button>
+        <button class="mid" data-rate="mid">Ok</button>
+        <button class="hard" data-rate="hard">Difícil</button>
+      </div>
+    </div>
+  </div>
+  <div class="card mini" id="train-tip"></div>
+</section>
+
+<section id="view-cases" class="hidden">
+  <div class="card">
+    <h2>Seus casos</h2>
+    <div class="mini" id="cases-summary"></div>
+    <table id="cases-table"><thead><tr><th>#</th><th>Grupo</th><th>Vezes</th><th>Tempo</th><th>Peso</th><th></th></tr></thead><tbody></tbody></table>
+    <div class="note">Peso alto = aparece mais no sorteio. "Fácil" baixa, "Difícil" sobe. Toque em "treinar" para forçar um caso específico.</div>
+  </div>
+</section>
+
+<section id="view-settings" class="hidden">
+  <div class="card">
+    <h2>Grupos no sorteio</h2>
+    <div class="chips" id="group-chips"></div>
+    <div class="row" style="margin-top:10px"><span class="mini">Comece com 1 ou 2 grupos. Adicione quando estiverem automáticos.</span>
+      <span><button class="chip" id="grp-all">todos</button> <button class="chip" id="grp-none">nenhum</button></span></div>
+  </div>
+  <div class="card">
+    <h2>Como o caso aparece</h2>
+    <div class="row"><div><div class="t">Slot</div><div class="d">Onde o par vai ser inserido</div></div>
+      <div class="seg" id="slot-seg"><button data-v="R">direita</button><button data-v="L">esquerda</button><button data-v="X">ambos</button></div></div>
+    <div class="row"><div><div class="t">Giro aleatório da camada de cima</div><div class="d">Treina reconhecer o caso de qualquer ângulo</div></div>
+      <button class="switch" id="auf-sw" role="switch" aria-label="Giro aleatório"></button></div>
+    <div class="row"><div><div class="t">Mostrar número do caso</div><div class="d">Desligue para não reconhecer pelo número</div></div>
+      <button class="switch" id="num-sw" role="switch" aria-label="Mostrar número"></button></div>
+  </div>
+  <div class="card">
+    <h2>Dados</h2>
+    <div class="row"><div><div class="t">Zerar progresso</div><div class="d">Apaga pesos e tempos deste navegador</div></div>
+      <button class="chip" id="reset-btn">zerar</button></div>
+  </div>
+</section>
+
+<section id="view-help" class="hidden">
+  <div class="card help">
+    <h2>O ciclo</h2>
+    <ol>
+      <li>Cubo montado na mão, cruz branca embaixo, verde na frente.</li>
+      <li>Aplique a sequência mostrada. O cubo fica com a cruz e três slots prontos e um par de F2L desmontado.</li>
+      <li>Olhe o caso. Onde está o canto, onde está a aresta, para onde aponta o branco. Não corra aqui: é o treino de reconhecimento.</li>
+      <li>Resolva o par do seu jeito. Só então toque em <b>Mostrar solução</b> e compare.</li>
+      <li>Avalie: <b>Fácil</b>, <b>Ok</b> ou <b>Difícil</b>. Os difíceis voltam mais vezes.</li>
+      <li>O cubo voltou a estar montado. <b>Próximo</b>.</li>
+    </ol>
+    <p class="note">Se você errou e desmontou mais que o slot, refaça a cruz e os três slots antes de continuar. Não tente corrigir o scramble.</p>
+  </div>
+  <div class="card help">
+    <h2>Lendo o desenho</h2>
+    <p>Peças cinzas são as outras peças da camada de cima: a posição delas não importa. Só o canto e a aresta coloridos fazem parte do caso.</p>
+    <p>Se o seu cubo tem outro esquema de cores, segure com o branco embaixo e ignore os nomes das cores: o que importa é a posição de cada peça e para onde o branco aponta.</p>
+  </div>
+  <div class="card help">
+    <h2>Notação</h2>
+    <p><b>R</b> direita, <b>L</b> esquerda, <b>U</b> cima, <b>D</b> baixo, <b>F</b> frente, <b>B</b> trás. Sem sinal: 90° horário olhando a face. <b>'</b>: anti-horário. <b>2</b>: 180°.</p>
+  </div>
+</section>
+</div>
+
+<div class="actions"><div class="in">
+  <button class="btn" id="btn-reveal">Mostrar solução</button>
+  <button class="btn primary" id="btn-next">Próximo</button>
+</div></div>
+<script>
+const MOVES={"R":[0,1,20,3,4,23,6,7,26,15,12,9,16,13,10,17,14,11,18,19,29,21,22,32,24,25,35,27,28,51,30,31,48,33,34,45,36,37,38,39,40,41,42,43,44,8,46,47,5,49,50,2,52,53],"L":[53,1,2,50,4,5,47,7,8,9,10,11,12,13,14,15,16,17,0,19,20,3,22,23,6,25,26,18,28,29,21,31,32,24,34,35,42,39,36,43,40,37,44,41,38,45,46,33,48,49,30,51,52,27],"U":[6,3,0,7,4,1,8,5,2,45,46,47,12,13,14,15,16,17,9,10,11,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,18,19,20,39,40,41,42,43,44,36,37,38,48,49,50,51,52,53],"D":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,24,25,26,18,19,20,21,22,23,42,43,44,33,30,27,34,31,28,35,32,29,36,37,38,39,40,41,51,52,53,45,46,47,48,49,50,15,16,17],"F":[0,1,2,3,4,5,44,41,38,6,10,11,7,13,14,8,16,17,24,21,18,25,22,19,26,23,20,15,12,9,30,31,32,33,34,35,36,37,27,39,40,28,42,43,29,45,46,47,48,49,50,51,52,53],"B":[11,14,17,3,4,5,6,7,8,9,10,35,12,13,34,15,16,33,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,36,39,42,2,37,38,1,40,41,0,43,44,51,48,45,52,49,46,53,50,47],"M":[0,52,2,3,49,5,6,46,8,9,10,11,12,13,14,15,16,17,18,1,20,21,4,23,24,7,26,27,19,29,30,22,32,33,25,35,36,37,38,39,40,41,42,43,44,45,34,47,48,31,50,51,28,53],"E":[0,1,2,3,4,5,6,7,8,9,10,11,21,22,23,15,16,17,18,19,20,39,40,41,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,48,49,50,42,43,44,45,46,47,12,13,14,51,52,53],"S":[0,1,2,43,40,37,6,7,8,9,3,11,12,4,14,15,5,17,18,19,20,21,22,23,24,25,26,27,28,29,16,13,10,33,34,35,36,30,38,39,31,41,42,32,44,45,46,47,48,49,50,51,52,53],"x":[18,19,20,21,22,23,24,25,26,15,12,9,16,13,10,17,14,11,27,28,29,30,31,32,33,34,35,53,52,51,50,49,48,47,46,45,38,41,44,37,40,43,36,39,42,8,7,6,5,4,3,2,1,0],"y":[6,3,0,7,4,1,8,5,2,45,46,47,48,49,50,51,52,53,9,10,11,12,13,14,15,16,17,29,32,35,28,31,34,27,30,33,18,19,20,21,22,23,24,25,26,36,37,38,39,40,41,42,43,44],"z":[42,39,36,43,40,37,44,41,38,6,3,0,7,4,1,8,5,2,24,21,18,25,22,19,26,23,20,15,12,9,16,13,10,17,14,11,33,30,27,34,31,28,35,32,29,47,50,53,46,49,52,45,48,51],"r":[0,19,20,3,22,23,6,25,26,15,12,9,16,13,10,17,14,11,18,28,29,21,31,32,24,34,35,27,52,51,30,49,48,33,46,45,36,37,38,39,40,41,42,43,44,8,7,47,5,4,50,2,1,53],"l":[53,52,2,50,49,5,47,46,8,9,10,11,12,13,14,15,16,17,0,1,20,3,4,23,6,7,26,18,19,29,21,22,32,24,25,35,42,39,36,43,40,37,44,41,38,45,34,33,48,31,30,51,28,27],"u":[6,3,0,7,4,1,8,5,2,45,46,47,48,49,50,15,16,17,9,10,11,12,13,14,24,25,26,27,28,29,30,31,32,33,34,35,18,19,20,21,22,23,42,43,44,36,37,38,39,40,41,51,52,53],"d":[0,1,2,3,4,5,6,7,8,9,10,11,21,22,23,24,25,26,18,19,20,39,40,41,42,43,44,33,30,27,34,31,28,35,32,29,36,37,38,48,49,50,51,52,53,45,46,47,12,13,14,15,16,17],"f":[0,1,2,43,40,37,44,41,38,6,3,11,7,4,14,8,5,17,24,21,18,25,22,19,26,23,20,15,12,9,16,13,10,33,34,35,36,30,27,39,31,28,42,32,29,45,46,47,48,49,50,51,52,53],"b":[11,14,17,10,13,16,6,7,8,9,32,35,12,31,34,15,30,33,18,19,20,21,22,23,24,25,26,27,28,29,37,40,43,36,39,42,2,5,38,1,4,41,0,3,44,51,48,45,52,49,46,53,50,47]};
+const POS=[[-2,3,-2],[0,3,-2],[2,3,-2],[-2,3,0],[0,3,0],[2,3,0],[-2,3,2],[0,3,2],[2,3,2],[3,2,2],[3,2,0],[3,2,-2],[3,0,2],[3,0,0],[3,0,-2],[3,-2,2],[3,-2,0],[3,-2,-2],[-2,2,3],[0,2,3],[2,2,3],[-2,0,3],[0,0,3],[2,0,3],[-2,-2,3],[0,-2,3],[2,-2,3],[-2,-3,2],[0,-3,2],[2,-3,2],[-2,-3,0],[0,-3,0],[2,-3,0],[-2,-3,-2],[0,-3,-2],[2,-3,-2],[-3,2,-2],[-3,2,0],[-3,2,2],[-3,0,-2],[-3,0,0],[-3,0,2],[-3,-2,-2],[-3,-2,0],[-3,-2,2],[2,2,-3],[0,2,-3],[-2,2,-3],[2,0,-3],[0,0,-3],[-2,0,-3],[2,-2,-3],[0,-2,-3],[-2,-2,-3]];
+const GROUPS=["Inserção básica", "Reposicionar aresta", "Reposicionar aresta e virar canto", "Separar par por cima", "Par formado de lado", "Casos estranhos", "Canto no slot, aresta em cima", "Aresta no slot, canto em cima", "Canto e aresta no slot"];
+const CASES=[{"id":1,"g":0,"alg":"U R U' R'","alts":["R' F R F'"]},{"id":2,"g":0,"alg":"F' U' F","alts":["y' R' U' R"]},{"id":3,"g":0,"alg":"U' F' U F","alts":["F R' F' R","y U' L' U L"]},{"id":4,"g":0,"alg":"R U R'","alts":["y F U F'"]},{"id":5,"g":1,"alg":"U' R U R' U2 R U' R'","alts":["U' R U R' U' R U2 R'","F2 L' U' L U F2"]},{"id":6,"g":1,"alg":"U' R U2 R' U2 R U' R'","alts":["U' R U2 R' U' R U2 R'","M' U' M U2 r U' r'"]},{"id":7,"g":1,"alg":"U F' U' F U2 F' U F","alts":["U' r U' R' U R U r'"]},{"id":8,"g":1,"alg":"U F' U2 F U2 F' U F","alts":["d R' U2 R U R' U2 R"]},{"id":9,"g":2,"alg":"U' R U' R' U F' U' F","alts":["F R U R' U' F' R U' R'"]},{"id":10,"g":2,"alg":"U' R U2 R' U F' U' F","alts":["U' R U2 R' d R' U' R"]},{"id":11,"g":2,"alg":"U F' U F U' F' U' F","alts":["d R' U R U' R' U' R"]},{"id":12,"g":2,"alg":"U' R U R' U R U R'","alts":["U2 R U' R' U' R U R'"]},{"id":13,"g":3,"alg":"U R U' R' U' R U R' U' R U R'","alts":["R' U2 R2 U R2 U R"]},{"id":14,"g":3,"alg":"U' R U' R' U R U R'","alts":[]},{"id":15,"g":3,"alg":"U R' F R F' U R U R'","alts":["R' D' R U' R' D R U R U' R'"]},{"id":16,"g":3,"alg":"R U2 R' U' R U R'","alts":["R U R' U' R U2 R' U2 R U R'"]},{"id":17,"g":4,"alg":"R U' R' U2 F' U' F","alts":["U F U R U' R' F' R U R'","R U' R' U d R' U' R"]},{"id":18,"g":4,"alg":"F' U2 F U F' U' F","alts":["R' F R F' R U' R' U R U' R'"]},{"id":19,"g":4,"alg":"U R U2 R' U R U' R'","alts":["U R U2 R2 F R F'","R U' R' U R U' R' U R U R'"]},{"id":20,"g":4,"alg":"U2 R U R' U R U' R'","alts":[]},{"id":21,"g":5,"alg":"U' F' U2 F U' F' U F","alts":["U' R U' R2 F R F' R U' R'"]},{"id":22,"g":5,"alg":"U2 F' U' F U' F' U F","alts":["F' L' U2 L F"]},{"id":23,"g":5,"alg":"U R U' R' U' R U' R' U R U' R'","alts":["R U R' U2 R U R' U' R U R'","U F R' F' R U R U R'"]},{"id":24,"g":5,"alg":"F U R U' R' F' R U' R'","alts":["F' U' F U2 F' U' F U F' U' F","U' R U R2 F R F' R U' R'"]},{"id":25,"g":6,"alg":"U' R' F R F' R U R'","alts":["R' F' R U R U' R' F"]},{"id":26,"g":6,"alg":"R U' R' U R U' R'","alts":["F' U' F U2 R U' R'"]},{"id":27,"g":6,"alg":"F' U' F U F' U' F","alts":["R' F R F' U R U' R'"]},{"id":28,"g":6,"alg":"U R U' R' U' F' U F","alts":["U R U' R' F R' F' R"]},{"id":29,"g":6,"alg":"F' U F U' F' U F","alts":["R U R' U' F R' F' R"]},{"id":30,"g":6,"alg":"R U R' U' R U R'","alts":["U' R U2 R' U2 R U R'","U' F R' F' R2 U R'"]},{"id":31,"g":7,"alg":"R U' R' F' U2 F","alts":["U' R' F R F' R U' R'","R U' R' U2 F R' F' R"]},{"id":32,"g":7,"alg":"U' R U' R' U2 R U' R'","alts":["U' R U' R' U R' F R F'"]},{"id":33,"g":7,"alg":"U' R U R' U F' U' F","alts":["U2 R U R' U' F' U F"]},{"id":34,"g":7,"alg":"R U R' U' R U R' U' R U R'","alts":["R2 U R2 U R2 U2 R2"]},{"id":35,"g":7,"alg":"U' R U2 R' U R U R'","alts":["U R U R' U2 R U R'","U R' D' R U' R' D R"]},{"id":36,"g":7,"alg":"U F' U' F U' R U R'","alts":["U2 R' F R F' U2 R U R'"]},{"id":37,"g":8,"alg":"R U' R' U' R U R' U2 R U' R'","alts":["R U R' U' R U2 R' U' R U R'","R2 U2 R' U' R U' R' U2 R'"]},{"id":38,"g":8,"alg":"R U' R' U F' U' F U' F' U' F","alts":["F' L' U2 L F R U R'","r U' r' U2 r U r' R U R'"]},{"id":39,"g":8,"alg":"R U' R' U F' U2 F U2 F' U F","alts":["R2 U2 F R2 F' U2 R' U R'"]},{"id":40,"g":8,"alg":"R U' R' U R U2 R' U R U' R'","alts":["R U2 R U R' U R U2 R2","R U R' U2 R U' R' U R U R'"]},{"id":41,"g":8,"alg":"R U' R' U2 F' U' F U' F' U F","alts":["R U' R' F' L' U2 L F","R U' R' r U' r' U2 r U r'"]}];
+// ---------- cube model ----------
+const FACES=['U','R','F','D','L','B'];
+const IDS=[...Array(54).keys()];
+function applyMove(state,m){
+  let b=m[0], s=m.slice(1), n = s===''?1:(s==='2'?2:3);
+  let st=state;
+  for(let i=0;i<n;i++){ const p=MOVES[b]; st=IDS.map(k=>st[p[k]]); }
+  return st;
+}
+function apply(state,moves){ for(const m of moves) state=applyMove(state,m); return state; }
+function parse(alg){ return alg.replace(/2'/g,'2').replace(/Dw/g,'d').trim().split(/\s+/).filter(Boolean); }
+function invert(moves){ return moves.slice().reverse().map(m=>{const b=m[0],s=m.slice(1); return s==="'"?b:(s==='2'?b+'2':b+"'");}); }
+const MIRROR={R:"L'",L:"R'",U:"U'",D:"D'",F:"F'",B:"B'",M:"M'",E:"E'",S:"S'",x:"x'",y:"y'",z:"z'",r:"l'",l:"r'",u:"u'",d:"d'",f:"f'",b:"b'"};
+function mirror(moves){ return moves.map(m=>{const b=m[0],s=m.slice(1); const mb=MIRROR[b]; const base=mb[0]; const inv=mb.length>1;
+  if(s==='2') return base+'2'; const prime = (s==="'") !== inv; return prime?base+"'":base; }); }
+function pieceOf(k){ const p=POS[k]; return p.map(c=>c>1?1:(c<-1?-1:0)); }
+const PIECE=IDS.map(pieceOf);
+function findSticker(face,x,y,z){ const f=FACES.indexOf(face); for(let k=f*9;k<f*9+9;k++){ const p=POS[k]; if(p[0]===x&&p[1]===y&&p[2]===z) return k;} return -1; }
+// ---------- colors ----------
+const COLORVAR={U:'--cU',R:'--cR',F:'--cF',D:'--cD',L:'--cL',B:'--cB'};
+function stickerFill(state,k,pairSet){
+  const origin=state[k]; const of=FACES[Math.floor(origin/9)];
+  const op=PIECE[origin]; const key=op.join(',');
+  const isUpiece = op[1]===1 && !(op[0]===0&&op[2]===0);
+  if(isUpiece && !pairSet.has(key)) return 'var(--cX)';
+  return `var(${COLORVAR[of]})`;
+}
+function pairSetFor(slot){ return slot==='L' ? new Set(['-1,-1,1','-1,0,1']) : new Set(['1,-1,1','1,0,1']); }
+function isPairSticker(state,k,pairSet){ return pairSet.has(PIECE[state[k]].join(',')); }
+// ---------- SVG rendering ----------
+function rect(x,y,w,h,fill,strong){ return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2.5" fill="${fill}" stroke="var(--sticker-line)" stroke-width="${strong?2.2:1}" ${strong?'stroke-linejoin="round"':''}/>`; }
+function renderTop(state,pairSet){
+  const S=34, g=3, o=34; // U face at offset o
+  let out='';
+  // strips
+  const strip=(k,x,y,w,h)=>rect(x,y,w,h,stickerFill(state,k,pairSet),isPairSticker(state,k,pairSet));
+  for(let j=0;j<3;j++){ const x=(j-1)*2;
+    out+=strip(findSticker('B',x,2,-3), o+j*(S+g), o-14-g, S, 14);
+    out+=strip(findSticker('F',x,2,3),  o+j*(S+g), o+3*(S+g)-g+g, S, 14);
+  }
+  for(let i=0;i<3;i++){ const z=(i-1)*2;
+    out+=strip(findSticker('L',-3,2,z), o-14-g, o+i*(S+g), 14, S);
+    out+=strip(findSticker('R',3,2,z),  o+3*(S+g), o+i*(S+g), 14, S);
+  }
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++){ const k=i*3+j; out+=rect(o+j*(S+g),o+i*(S+g),S,S,stickerFill(state,k,pairSet),isPairSticker(state,k,pairSet)); }
+  // slot marker (small dot on the front strip side)
+  return out;
+}
+function renderFront(state,pairSet,slot){
+  const S=32,g=2; let out='';
+  const faces = slot==='L' ? ['L','F'] : ['F','R'];
+  faces.forEach((f,fi)=>{ const base=FACES.indexOf(f)*9; const ox=fi*(3*(S+g)+6);
+    for(let i=0;i<3;i++)for(let j=0;j<3;j++){ const k=base+i*3+j; out+=rect(ox+j*(S+g),i*(S+g),S,S,stickerFill(state,k,pairSet),isPairSticker(state,k,pairSet)); }
+  });
+  return out;
+}
+// ---------- storage ----------
+const KEY='f2l-trainer-v1';
+let store={settings:{groups:[0],slot:'R',auf:false,num:true},progress:{}};
+function load(){ try{ const s=localStorage.getItem(KEY); if(s){ const o=JSON.parse(s); store={settings:Object.assign(store.settings,o.settings||{}),progress:o.progress||{}}; } }catch(e){} }
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){} }
+function prog(id){ return store.progress[id] || (store.progress[id]={n:0,score:0,t:0,tn:0}); }
+// ---------- trainer ----------
+let cur=null, lastId=null;
+function selectedCases(){ return CASES.filter(c=>store.settings.groups.includes(c.g)); }
+function weight(c){ const p=store.progress[c.id]; if(!p) return 3; return 1+p.score; }
+function pick(){
+  const pool=selectedCases(); if(!pool.length) return null;
+  let cands = pool.length>1 ? pool.filter(c=>c.id!==lastId) : pool;
+  const tot=cands.reduce((a,c)=>a+weight(c),0); let r=Math.random()*tot;
+  for(const c of cands){ r-=weight(c); if(r<=0) return c; } return cands[cands.length-1];
+}
+function makeCase(c,forceSlot){
+  const s=store.settings; let slot = forceSlot || s.slot; if(slot==='X') slot=Math.random()<0.5?'R':'L';
+  let sol=parse(c.alg); let alts=c.alts.map(parse);
+  if(slot==='L'){ sol=mirror(sol); alts=alts.map(mirror); }
+  let scr=invert(sol); let auf=null;
+  if(s.auf){ auf=["U","U2","U'"][Math.floor(Math.random()*3)]; scr=scr.concat([auf]); }
+  const state=apply(IDS,scr);
+  cur={c,slot,sol,alts,scr,auf,state,start:performance.now(),revealed:false};
+  lastId=c.id; render();
+}
+function next(){ const c=pick(); if(!c){ cur=null; render(); return; } makeCase(c); }
+function reveal(){ if(!cur||cur.revealed) return; cur.revealed=true; cur.elapsed=(performance.now()-cur.start)/1000; render(); const el=document.getElementById('solution'); if(el&&el.scrollIntoView) setTimeout(()=>el.scrollIntoView({block:'end',behavior:'smooth'}),30); }
+function rate(r){ if(!cur||!cur.revealed) return; const p=prog(cur.c.id); p.n++; p.t+=cur.elapsed; p.tn++;
+  if(r==='easy') p.score=Math.max(0,p.score-1); else if(r==='hard') p.score=Math.min(12,p.score+2); else p.score=Math.max(0,p.score-0.25);
+  save(); next(); }
+function render(){
+  const $=id=>document.getElementById(id);
+  const s=store.settings;
+  $('hdr-sub').textContent = `${selectedCases().length} de 41 casos no sorteio`;
+  if(!cur){ $('case-num').textContent='–'; $('case-group').textContent=''; $('svg-top').innerHTML=''; $('svg-front').innerHTML='';
+    $('scramble').innerHTML='<span class="mini">Nenhum grupo selecionado. Escolha grupos em Ajustes.</span>'; $('solution').classList.add('hidden'); $('btn-reveal').disabled=true; $('train-tip').textContent=''; return; }
+  $('btn-reveal').disabled=cur.revealed;
+  $('case-num').textContent = s.num ? `${cur.c.id}${cur.slot==='L'?' (esq.)':''}` : '?';
+  $('case-group').textContent = s.num ? GROUPS[cur.c.g] : '';
+  const ps=pairSetFor(cur.slot);
+  $('svg-top').innerHTML=renderTop(cur.state,ps);
+  $('svg-front').innerHTML=renderFront(cur.state,ps,cur.slot);
+  $('dgl-front').textContent = cur.slot==='L' ? 'esquerda · frente' : 'frente · direita';
+  $('scramble').innerHTML = cur.scr.map((m,i)=>`<span class="mv${cur.auf&&i===cur.scr.length-1?' auf':''}">${m}</span>`).join('');
+  const sol=$('solution');
+  if(cur.revealed){ sol.classList.remove('hidden');
+    const pre = cur.auf ? invert([cur.auf])[0]+'  ' : '';
+    $('sol-alg').textContent = pre + cur.sol.join(' ');
+    $('sol-alt').innerHTML = cur.alts.length ? 'Também: ' + cur.alts.map(a=>`<code>${pre.trim()?pre.trim()+' ':''}${a.join(' ')}</code>`).join(' &nbsp;|&nbsp; ') : '';
+    const p=store.progress[cur.c.id]; const avg=p&&p.tn?` · sua média ${(p.t/p.tn).toFixed(1)} s em ${p.tn}x`:'';
+    $('sol-meta').textContent = `Reconhecimento: ${cur.elapsed.toFixed(1)} s${avg}${cur.auf?' · a primeira letra desfaz o giro aleatório':''}`;
+  } else sol.classList.add('hidden');
+  $('train-tip').textContent = cur.revealed ? 'Se a sua solução tinha 2 ou 3 movimentos a mais, tudo bem. Só aprenda o algoritmo quando a intuitiva ficar muito pior.' : 'Resolva no cubo antes de mostrar a solução. O tempo até "Mostrar solução" conta como reconhecimento.';
+}
+// ---------- cases view ----------
+function renderCases(){
+  const tb=document.querySelector('#cases-table tbody'); const sel=new Set(selectedCases().map(c=>c.id));
+  let seen=0; tb.innerHTML=CASES.map(c=>{ const p=store.progress[c.id]; if(p&&p.n) seen++;
+    const w=weight(c); const t=p&&p.tn?(p.t/p.tn).toFixed(1)+' s':'–';
+    return `<tr class="${sel.has(c.id)?'':'off'}"><td><b>${c.id}</b></td><td class="mini">${GROUPS[c.g]}</td><td>${p?p.n:0}</td><td>${t}</td><td><span class="sc${w>=5?' h':''}">${w.toFixed(w%1?1:0)}</span></td><td><button data-train="${c.id}">treinar</button></td></tr>`; }).join('');
+  document.getElementById('cases-summary').textContent = `${seen} de 41 casos já vistos.`;
+}
+// ---------- settings view ----------
+function renderSettings(){
+  const s=store.settings;
+  document.getElementById('group-chips').innerHTML = GROUPS.map((g,i)=>{ const ids=CASES.filter(c=>c.g===i).map(c=>c.id); return `<button class="chip${s.groups.includes(i)?' on':''}" data-g="${i}">${g} <span class="mini">${ids[0]}–${ids[ids.length-1]}</span></button>`; }).join('');
+  document.querySelectorAll('#slot-seg button').forEach(b=>b.classList.toggle('on',b.dataset.v===s.slot));
+  document.getElementById('auf-sw').classList.toggle('on',!!s.auf);
+  document.getElementById('num-sw').classList.toggle('on',!!s.num);
+}
+// ---------- wiring ----------
+function showView(v){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.view===v));
+  ['train','cases','settings','help'].forEach(x=>document.getElementById('view-'+x).classList.toggle('hidden',x!==v));
+  document.querySelector('.actions').classList.toggle('hidden',v!=='train');
+  if(v==='cases') renderCases(); if(v==='settings') renderSettings();
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  load();
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>showView(t.dataset.view)));
+  document.getElementById('btn-reveal').addEventListener('click',reveal);
+  document.getElementById('btn-next').addEventListener('click',next);
+  document.querySelectorAll('.rate button').forEach(b=>b.addEventListener('click',()=>rate(b.dataset.rate)));
+  document.getElementById('group-chips').addEventListener('click',e=>{ const b=e.target.closest('[data-g]'); if(!b) return; const g=+b.dataset.g; const gs=store.settings.groups;
+    store.settings.groups = gs.includes(g)? gs.filter(x=>x!==g) : gs.concat([g]).sort(); save(); renderSettings(); if(!cur||!selectedCases().some(c=>c.id===cur.c.id)) next(); else render(); });
+  document.getElementById('grp-all').addEventListener('click',()=>{store.settings.groups=GROUPS.map((_,i)=>i);save();renderSettings();if(!cur)next();else render();});
+  document.getElementById('grp-none').addEventListener('click',()=>{store.settings.groups=[];save();renderSettings();cur=null;render();});
+  document.getElementById('slot-seg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; store.settings.slot=b.dataset.v; save(); renderSettings(); });
+  document.getElementById('auf-sw').addEventListener('click',()=>{store.settings.auf=!store.settings.auf;save();renderSettings();});
+  document.getElementById('num-sw').addEventListener('click',()=>{store.settings.num=!store.settings.num;save();renderSettings();render();});
+  document.getElementById('reset-btn').addEventListener('click',()=>{ if(confirm('Zerar pesos e tempos?')){ store.progress={}; save(); renderCases(); } });
+  document.querySelector('#cases-table').addEventListener('click',e=>{ const b=e.target.closest('[data-train]'); if(!b) return; const c=CASES.find(x=>x.id===+b.dataset.train); makeCase(c); showView('train'); });
+  document.addEventListener('keydown',e=>{ if(e.target.tagName==='BUTTON'&&e.key!==' ') return; if(e.key===' '){ e.preventDefault(); if(cur&&!cur.revealed) reveal(); else next(); } if(e.key==='1') rate('easy'); if(e.key==='2') rate('mid'); if(e.key==='3') rate('hard'); });
+  next();
+});
+</script></body></html>
