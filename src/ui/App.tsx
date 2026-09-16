@@ -1,26 +1,28 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getSet } from '../sets';
 import { foldCaseStates, newId, statesForSet, type Attempt } from '../progress/model';
-import { localAttemptStore, loadSettings, saveSettings, settingsFor, type AppSettings } from '../progress/store';
+import { loadSettings, openAttemptStore, saveSettings, settingsFor, type AppSettings, type AttemptStore } from '../progress/store';
 import { useTrainer, type AttemptInput } from '../trainer/useTrainer';
 import { selectedCases, type SetSettings } from '../trainer/trainer';
 import { Train } from './Train';
-import { Cases } from './Cases';
+import { Progress } from './Progress';
 import { Settings } from './Settings';
 import { Help } from './Help';
 
-type View = 'train' | 'cases' | 'settings' | 'help';
+type View = 'train' | 'progress' | 'settings' | 'help';
 const VIEWS: { id: View; label: string }[] = [
-  { id: 'train', label: 'Treinar' }, { id: 'cases', label: 'Casos' }, { id: 'settings', label: 'Ajustes' }, { id: 'help', label: 'Como usar' },
+  { id: 'train', label: 'Treinar' }, { id: 'progress', label: 'Progresso' }, { id: 'settings', label: 'Ajustes' }, { id: 'help', label: 'Como usar' },
 ];
-
-const store = localAttemptStore;
 
 export function App() {
   const [view, setView] = useState<View>('train');
   const [app, setApp] = useState<AppSettings>(loadSettings);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
-  useEffect(() => { store.load().then(setAttempts); }, []);
+  const [focus, setFocus] = useState<Set<string | number> | null>(null);
+  const storeRef = useRef<AttemptStore | null>(null);
+  useEffect(() => {
+    openAttemptStore().then(async (s) => { storeRef.current = s; setAttempts(await s.load()); });
+  }, []);
 
   const set = getSet(app.setId);
   const settings = settingsFor(app, set.id);
@@ -39,10 +41,10 @@ export function App() {
       auf: a.auf, recognition_ms: a.recognitionMs, rating: a.rating, created_at: new Date().toISOString(),
     };
     setAttempts((prev) => [...prev, attempt]);
-    void store.add(attempt);
+    void storeRef.current?.add(attempt);
   }, []);
 
-  const trainer = useTrainer(set, settings, caseStates, onAttempt);
+  const trainer = useTrainer(set, settings, caseStates, onAttempt, focus);
   const { active, next, reveal, rate } = trainer;
 
   useEffect(() => {
@@ -59,26 +61,41 @@ export function App() {
   }, [active, next, reveal, rate]);
 
   const reset = () => {
-    if (confirm('Zerar pesos e tempos?')) { setAttempts([]); void store.clear(); }
+    if (confirm('Zerar pesos e tempos?')) { setAttempts([]); void storeRef.current?.clear(); }
   };
   const trainCase = (id: string | number) => {
     const c = set.cases.find((x) => x.id === id);
     if (c) { trainer.start(c); setView('train'); }
   };
+  const focusOn = (ids: (string | number)[]) => { setFocus(new Set(ids)); setView('train'); };
 
   return (
     <div className="app">
       <header>
         <h1>Treino {set.name}</h1>
-        <span className="sub">{selectedCases(set, settings).length} de {set.cases.length} casos no sorteio</span>
+        <span className="sub">
+          {focus ? `só ${focus.size} casos` : `${selectedCases(set, settings).length} de ${set.cases.length} casos no sorteio`}
+        </span>
       </header>
       <div className="tabs">
         {VIEWS.map((v) => (
           <button key={v.id} className={`tab${view === v.id ? ' on' : ''}`} onClick={() => setView(v.id)}>{v.label}</button>
         ))}
       </div>
-      {view === 'train' && <Train active={active} settings={settings} caseState={active ? caseStates.get(active.case.id) : undefined} onRate={rate} />}
-      {view === 'cases' && <Cases set={set} settings={settings} caseStates={caseStates} onTrain={trainCase} />}
+      {view === 'train' && (
+        <>
+          {focus && (
+            <div className="row focus">
+              <span className="mini">Treinando só os casos {[...focus].join(', ')}.</span>
+              <button className="chip" onClick={() => setFocus(null)}>voltar ao sorteio normal</button>
+            </div>
+          )}
+          <Train active={active} settings={settings} caseState={active ? caseStates.get(active.case.id) : undefined} onRate={rate} />
+        </>
+      )}
+      {view === 'progress' && (
+        <Progress set={set} settings={settings} attempts={attempts} caseStates={caseStates} onTrain={trainCase} onFocus={focusOn} />
+      )}
       {view === 'settings' && <Settings set={set} settings={settings} onChange={updateSettings} onReset={reset} />}
       {view === 'help' && <Help set={set} />}
       {view === 'train' && (

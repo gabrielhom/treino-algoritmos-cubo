@@ -17,11 +17,18 @@ export function useTrainer(
   settings: SetSettings,
   caseStates: Map<string | number, CaseState>,
   onAttempt: (a: AttemptInput) => void,
+  /** When set, the draw is restricted to these case ids instead of the selected groups. */
+  focus: Set<string | number> | null = null,
 ) {
   const [active, setActive] = useState<ActiveCase | null>(null);
   const lastId = useRef<string | number | null>(null);
   const statesRef = useRef(caseStates);
   statesRef.current = caseStates;
+
+  const pool = useCallback(
+    () => (focus ? set.cases.filter((c) => focus.has(c.id)) : selectedCases(set, settings)),
+    [set, settings, focus],
+  );
 
   const start = useCallback((c: AlgCase, forceSlot?: Slot) => {
     lastId.current = c.id;
@@ -29,10 +36,10 @@ export function useTrainer(
   }, [set, settings]);
 
   const next = useCallback(() => {
-    const c = pickCase(selectedCases(set, settings), statesRef.current, lastId.current);
+    const c = pickCase(pool(), statesRef.current, lastId.current);
     if (!c) { setActive(null); return; }
     start(c);
-  }, [set, settings, start]);
+  }, [pool, start]);
 
   const reveal = useCallback(() => {
     setActive((a) => (!a || a.revealed ? a : { ...a, revealed: true, elapsedMs: performance.now() - a.startedAt }));
@@ -47,12 +54,12 @@ export function useTrainer(
     next();
   }, [active, next, onAttempt]);
 
-  // Re-pick when the set or the selected groups no longer include the current case.
+  // Re-pick when the set, the selected groups or the focus no longer include the current case.
   useEffect(() => {
-    const pool = selectedCases(set, settings);
-    if (!active || active.set.id !== set.id || !pool.some((c) => c.id === active.case.id)) next();
+    const p = pool();
+    if (!active || active.set.id !== set.id || !p.some((c) => c.id === active.case.id)) next();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [set, settings.groups]);
+  }, [set, settings.groups, focus]);
 
   return { active, next, reveal, rate, start };
 }

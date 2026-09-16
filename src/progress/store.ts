@@ -1,11 +1,12 @@
-// Local persistence. Attempts live in localStorage for now; settings always do.
-// ponytail: localStorage store, swap for IndexedDB in phase 3 (same interface).
+// Local persistence. Attempts go to IndexedDB, with localStorage as fallback;
+// settings always live in localStorage.
 import type { Attempt } from './model';
 import { DEFAULT_SETTINGS, type SetSettings } from '../trainer/trainer';
 
 export interface AttemptStore {
   load(): Promise<Attempt[]>;
   add(a: Attempt): Promise<void>;
+  addMany(list: Attempt[]): Promise<void>;
   clear(): Promise<void>;
 }
 
@@ -20,14 +21,30 @@ export const localAttemptStore: AttemptStore = {
     }
   },
   async add(a) {
+    await this.addMany([a]);
+  },
+  async addMany(list) {
     const all = await this.load();
-    all.push(a);
-    localStorage.setItem(ATTEMPTS_KEY, JSON.stringify(all));
+    const byId = new Map(all.map((a) => [a.id, a]));
+    for (const a of list) byId.set(a.id, a);
+    localStorage.setItem(ATTEMPTS_KEY, JSON.stringify([...byId.values()]));
   },
   async clear() {
     localStorage.removeItem(ATTEMPTS_KEY);
   },
 };
+
+/** Picks IndexedDB when available and moves any localStorage attempts (phase 2 data) into it once. */
+export async function openAttemptStore(): Promise<AttemptStore> {
+  if (typeof indexedDB === 'undefined') return localAttemptStore;
+  const { idbAttemptStore } = await import('./db');
+  const legacy = await localAttemptStore.load();
+  if (legacy.length) {
+    await idbAttemptStore.addMany(legacy);
+    await localAttemptStore.clear();
+  }
+  return idbAttemptStore;
+}
 
 export interface AppSettings {
   setId: string;

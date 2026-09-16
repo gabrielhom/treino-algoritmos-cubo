@@ -50,11 +50,29 @@ describe('App', () => {
     const stored = JSON.parse(localStorage.getItem('cube-trainer:attempts')!);
     expect(stored).toHaveLength(1);
     expect(stored[0]).toMatchObject({ set_id: 'f2l', case_id: before, rating: 'hard', mirrored: false });
-    await click(byText('Casos'));
-    expect($('.card .mini').textContent).toBe('1 de 41 casos já vistos.');
+    await click(byText('Progresso'));
+    expect($('.card .row b').textContent).toBe('1 de 41');
     const row = $$('tbody tr').find((r) => r.querySelector('b')!.textContent === before)!;
     expect(row.querySelector('.sc')!.textContent).toBe('3'); // 1 + 2 after one "hard"
     expect(row.querySelectorAll('td')[2].textContent).toBe('1');
+    expect(row.querySelectorAll('td')[5].textContent).toBe('Difícil');
+    // heaviest list + focus mode
+    expect($$('.chips .chip.on').map((c) => c.firstChild!.textContent!.trim())).toEqual([before]);
+    await click(byText('treinar só esses 1'));
+    expect($('header .sub').textContent).toBe('só 1 casos');
+    expect($('.caselabel b').textContent).toBe(before);
+    await click(byText('voltar ao sorteio normal'));
+    expect($('header .sub').textContent).toBe('4 de 41 casos no sorteio');
+  });
+
+  it('progress table sorts by weight and by attempts', async () => {
+    await click(byText('Progresso'));
+    const ths = () => $$('th.sortable');
+    await click(ths().find((t) => t.textContent!.startsWith('Peso'))!);
+    expect(ths().find((t) => t.textContent!.startsWith('Peso'))!.textContent).toContain('▾');
+    expect($$('tbody tr .sc').map((s) => s.textContent)).toEqual(Array(41).fill('3'));
+    await click(ths().find((t) => t.textContent!.startsWith('#'))!);
+    expect($$('tbody tr b').slice(0, 3).map((b) => b.textContent)).toEqual(['1', '2', '3']);
   });
 
   it('keyboard: space reveals then advances, 1/2/3 rate', async () => {
@@ -86,8 +104,8 @@ describe('App', () => {
     expect(saved.sets.f2l.groups).toHaveLength(9);
   });
 
-  it('"treinar" on the cases tab forces that case', async () => {
-    await click(byText('Casos'));
+  it('"treinar" on the progress tab forces that case', async () => {
+    await click(byText('Progresso'));
     const row = $$('tbody tr').find((r) => r.querySelector('b')!.textContent === '41')!;
     await click(row.querySelector('button')!);
     expect($('.caselabel b').textContent).toBe('41');

@@ -79,3 +79,7 @@ td button{font:inherit;font-size:13px;padding:5px 9px;border-radius:7px;border:1
 .empty{color:var(--ink-2);text-align:center;padding:30px 10px}
 .mini{font-size:13px;color:var(--ink-2)}
 @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+/* progress screen */
+th.sortable{cursor:pointer;user-select:none} th.sortable.on{color:var(--ink)}
+.chart{display:block;width:100%;height:auto;max-width:360px;margin:0 auto}
+.row.focus{border-top:0;padding:0 0 10px}
