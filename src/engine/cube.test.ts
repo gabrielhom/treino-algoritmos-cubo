@@ -45,7 +45,11 @@ describe('parse / invert / mirror', () => {
   });
   it('mirror of the right-slot insertion is the left-slot insertion', () => {
     expect(mirror(parse("U R U' R'"))).toEqual(["U'", "L'", 'U', 'L']);
-    expect(mirror(parse('r U2 M'))).toEqual(["l'", 'U2', "M'"]);
+    expect(mirror(parse("r U2 M E S x y z"))).toEqual(["l'", 'U2', 'M', "E'", "S'", 'x', "y'", "z'"]);
+  });
+  it('mirroring a slice identity keeps it an identity', () => {
+    expect(apply(SOLVED, mirror(parse("R L' x'")))).toEqual(seq('M'));
+    expect(apply(SOLVED, mirror(parse("U D' y'")))).toEqual(apply(SOLVED, mirror(['E'])));
   });
 });
 

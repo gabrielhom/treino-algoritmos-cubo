@@ -67,9 +67,12 @@ export function invert(moves: string[]): string[] {
     });
 }
 
+// Reflection across the M plane flips the layer but keeps the turn direction for
+// moves around the x axis (M, x). Moves around y and z invert. The prototype had
+// M -> M' and x -> x', which broke the mirrored alternative of F2L case 6.
 const MIRROR: Record<string, string> = {
-  R: "L'", L: "R'", U: "U'", D: "D'", F: "F'", B: "B'", M: "M'", E: "E'", S: "S'",
-  x: "x'", y: "y'", z: "z'", r: "l'", l: "r'", u: "u'", d: "d'", f: "f'", b: "b'",
+  R: "L'", L: "R'", U: "U'", D: "D'", F: "F'", B: "B'", M: 'M', E: "E'", S: "S'",
+  x: 'x', y: "y'", z: "z'", r: "l'", l: "r'", u: "u'", d: "d'", f: "f'", b: "b'",
 };
 
 /** Mirror across the M slice (right slot -> left slot). */
