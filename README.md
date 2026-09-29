@@ -32,7 +32,7 @@ Nada específico de F2L fica fora de `src/sets/f2l/`. Para adicionar um conjunto
 1. Crie um projeto em [supabase.com](https://supabase.com).
 2. No **SQL Editor**, rode o conteúdo de [`supabase.sql`](./supabase.sql). Ele cria a tabela `attempts` com RLS: cada usuário só lê e insere as próprias linhas. Não há update nem delete: tentativas são append-only e o estado por caso (`case_state`) é recalculado no cliente a partir delas.
 3. Em **Authentication → Sign In / Providers → Email**, deixe **Email** ligado. O app usa e-mail + senha (botões "entrar" e "criar conta").
-   Para o PWA instalado no iPhone, o mais simples é **desligar "Confirm email"**: a conta criada já entra direto no app. Se deixar ligado, o usuário cria a conta, abre uma vez o link de confirmação (que abre no Safari) e depois volta ao app e entra com e-mail e senha. Motivo: no iOS o app da tela inicial não compartilha sessão com o Safari, então login por link (magic link) não chega ao app; e, no plano gratuito sem SMTP próprio, os templates de e-mail não podem ser editados para incluir um código.
+   **"Confirm email" fica ligado.** Ao criar a conta, o usuário abre uma única vez o link de confirmação (que abre no Safari) e depois volta ao app e entra com e-mail e senha; daí em diante não precisa mais do e-mail. Motivo: no iOS o app da tela inicial não compartilha sessão com o Safari, então login por link (magic link) não chega ao app; e, no plano gratuito sem SMTP próprio, os templates de e-mail não podem ser editados para incluir um código.
 4. Em **Authentication → URL Configuration**, coloque a URL do deploy em *Site URL* e adicione `http://localhost:5173` e a URL da Vercel em *Redirect URLs*.
 5. Em **Project Settings → API**, copie *Project URL* e *anon public key*.
 
@@ -42,6 +42,11 @@ Variáveis de ambiente (veja `.env.example`):
 |---|---|
 | `VITE_SUPABASE_URL` | Project URL |
 | `VITE_SUPABASE_ANON_KEY` | anon public key |
+| `CRON_SECRET` | opcional: protege `/api/keep-alive` (a Vercel envia `Authorization: Bearer <valor>` no cron) |
+
+### Keep-alive (projeto gratuito não pausar)
+
+O Supabase gratuito pausa o projeto após um período sem atividade. Um [Vercel Cron](https://vercel.com/docs/cron-jobs) (`vercel.json` → `crons`) chama `/api/keep-alive` uma vez por dia às 12:00 UTC (09:00 em Brasília). A função ([`api/keep-alive.ts`](./api/keep-alive.ts)) faz `select id from attempts limit 1` pela REST do Supabase com a chave anon; com RLS o resultado vem vazio, mas a consulta chega ao banco. Ela lê `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` do ambiente da Vercel (também aceita `SUPABASE_URL` / `SUPABASE_ANON_KEY`). Se `CRON_SECRET` estiver definido, a rota exige `Authorization: Bearer <CRON_SECRET>`.
 
 Local: crie um `.env.local` com as duas. Na Vercel: **Settings → Environment Variables**.
 
