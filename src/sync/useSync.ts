@@ -90,9 +90,18 @@ export function useSync(
     return () => window.removeEventListener('online', sync);
   }, [status.session, sync]);
 
+  // Sends an e-mail with a one-time code (and a link as fallback). On iOS the link
+  // opens in Safari, whose storage is separate from the installed PWA, so the
+  // session would never reach the home-screen app: the code is typed in-app instead.
   const signIn = useCallback(async (email: string) => {
     if (!supabase) return 'Sincronização não configurada.';
     const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin } });
+    return error ? error.message : null;
+  }, []);
+
+  const verifyCode = useCallback(async (email: string, token: string) => {
+    if (!supabase) return 'Sincronização não configurada.';
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
     return error ? error.message : null;
   }, []);
 
@@ -100,5 +109,5 @@ export function useSync(
     await supabase?.auth.signOut();
   }, []);
 
-  return { status, sync, signIn, signOut };
+  return { status, sync, signIn, verifyCode, signOut };
 }
