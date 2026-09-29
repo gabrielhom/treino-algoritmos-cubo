@@ -31,7 +31,8 @@ Nada específico de F2L fica fora de `src/sets/f2l/`. Para adicionar um conjunto
 
 1. Crie um projeto em [supabase.com](https://supabase.com).
 2. No **SQL Editor**, rode o conteúdo de [`supabase.sql`](./supabase.sql). Ele cria a tabela `attempts` com RLS: cada usuário só lê e insere as próprias linhas. Não há update nem delete: tentativas são append-only e o estado por caso (`case_state`) é recalculado no cliente a partir delas.
-3. Em **Authentication → Providers**, deixe **Email** ligado. O app usa magic link (sem senha).
+3. Em **Authentication → Providers**, deixe **Email** ligado. O app usa código de uso único por e-mail (sem senha).
+   Em **Authentication → Emails → Templates → Magic Link**, inclua o código no corpo, por exemplo `<p>Seu código: <b>{{ .Token }}</b></p>` (o link `{{ .ConfirmationURL }}` pode ficar como alternativa). Faça o mesmo em **Confirm signup**, que é o template usado no primeiro login de um e-mail novo. Motivo: no iPhone o link abre no Safari, que não compartilha a sessão com o app instalado na tela inicial; o código é digitado dentro do app.
 4. Em **Authentication → URL Configuration**, coloque a URL do deploy em *Site URL* e adicione `http://localhost:5173` e a URL da Vercel em *Redirect URLs*.
 5. Em **Project Settings → API**, copie *Project URL* e *anon public key*.
 

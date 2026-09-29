@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import type { SyncStatus } from '../sync/useSync';
 
-export function Account({ status, pending, onSignIn, onSignOut, onSync }: {
+export function Account({ status, pending, onSignIn, onVerify, onSignOut, onSync }: {
   status: SyncStatus;
   pending: number;
   onSignIn: (email: string) => Promise<string | null>;
+  onVerify: (email: string, code: string) => Promise<string | null>;
   onSignOut: () => void;
   onSync: () => void;
 }) {
   const [email, setEmail] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [code, setCode] = useState('');
 
   if (!status.configured) {
     return (
@@ -21,21 +24,46 @@ export function Account({ status, pending, onSignIn, onSignOut, onSync }: {
     );
   }
 
-  if (!status.session) {
-    const send = async (e: React.FormEvent) => {
+  if (!status.session && sentTo) {
+    const verify = async (e: React.FormEvent) => {
       e.preventDefault();
       setSending(true);
-      const err = await onSignIn(email.trim());
+      const err = await onVerify(sentTo, code.trim());
       setSending(false);
-      setMsg(err ?? 'Link enviado. Abra o e-mail neste aparelho para entrar.');
+      setMsg(err ?? null);
     };
     return (
       <div className="card">
         <h2>Conta</h2>
-        <p className="mini">Entre com seu e-mail para sincronizar o progresso entre celular e PC. Sem senha: você recebe um link.</p>
+        <p className="mini">Enviamos um código para <b>{sentTo}</b>. Digite-o aqui (não precisa abrir o link).</p>
+        <form className="row" onSubmit={verify}>
+          <input className="input" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6,10}" maxLength={10}
+            required placeholder="código" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
+          <button className="chip" type="submit" disabled={sending || code.length < 6}>{sending ? 'verificando…' : 'entrar'}</button>
+        </form>
+        <button className="chip" type="button" onClick={() => { setSentTo(null); setCode(''); setMsg(null); }}>trocar e-mail / reenviar</button>
+        {msg && <div className="note">{msg}</div>}
+      </div>
+    );
+  }
+
+  if (!status.session) {
+    const send = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setSending(true);
+      const addr = email.trim();
+      const err = await onSignIn(addr);
+      setSending(false);
+      if (err) setMsg(err);
+      else { setMsg(null); setCode(''); setSentTo(addr); }
+    };
+    return (
+      <div className="card">
+        <h2>Conta</h2>
+        <p className="mini">Entre com seu e-mail para sincronizar o progresso entre celular e PC. Sem senha: você recebe um código.</p>
         <form className="row" onSubmit={send}>
           <input className="input" type="email" required placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <button className="chip" type="submit" disabled={sending || !email}>{sending ? 'enviando…' : 'enviar link'}</button>
+          <button className="chip" type="submit" disabled={sending || !email}>{sending ? 'enviando…' : 'enviar código'}</button>
         </form>
         {msg && <div className="note">{msg}</div>}
       </div>
