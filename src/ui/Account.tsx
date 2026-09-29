@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import type { SyncStatus } from '../sync/useSync';
 
-export function Account({ status, pending, onSignIn, onVerify, onSignOut, onSync }: {
+export function Account({ status, pending, onSignIn, onSignUp, onSignOut, onSync }: {
   status: SyncStatus;
   pending: number;
-  onSignIn: (email: string) => Promise<string | null>;
-  onVerify: (email: string, code: string) => Promise<string | null>;
+  onSignIn: (email: string, password: string) => Promise<string | null>;
+  onSignUp: (email: string, password: string) => Promise<string | { needsConfirmation: boolean }>;
   onSignOut: () => void;
   onSync: () => void;
 }) {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [creating, setCreating] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [sentTo, setSentTo] = useState<string | null>(null);
-  const [code, setCode] = useState('');
 
   if (!status.configured) {
     return (
@@ -24,47 +24,46 @@ export function Account({ status, pending, onSignIn, onVerify, onSignOut, onSync
     );
   }
 
-  if (!status.session && sentTo) {
-    const verify = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setSending(true);
-      const err = await onVerify(sentTo, code.trim());
-      setSending(false);
-      setMsg(err ?? null);
-    };
-    return (
-      <div className="card">
-        <h2>Conta</h2>
-        <p className="mini">Enviamos um código para <b>{sentTo}</b>. Digite-o aqui (não precisa abrir o link).</p>
-        <form className="row" onSubmit={verify}>
-          <input className="input" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6,10}" maxLength={10}
-            required placeholder="código" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
-          <button className="chip" type="submit" disabled={sending || code.length < 6}>{sending ? 'verificando…' : 'entrar'}</button>
-        </form>
-        <button className="chip" type="button" onClick={() => { setSentTo(null); setCode(''); setMsg(null); }}>trocar e-mail / reenviar</button>
-        {msg && <div className="note">{msg}</div>}
-      </div>
-    );
-  }
-
   if (!status.session) {
-    const send = async (e: React.FormEvent) => {
+    const submit = async (e: React.FormEvent) => {
       e.preventDefault();
       setSending(true);
+      setMsg(null);
       const addr = email.trim();
-      const err = await onSignIn(addr);
+      if (creating) {
+        const r = await onSignUp(addr, password);
+        if (typeof r === 'string') setMsg(r);
+        else if (r.needsConfirmation) {
+          setMsg(`Conta criada. Enviamos um link de confirmação para ${addr}: abra, confirme e depois volte aqui no app e toque em "entrar".`);
+          setCreating(false);
+        }
+      } else {
+        const err = await onSignIn(addr, password);
+        if (err) setMsg(err);
+      }
       setSending(false);
-      if (err) setMsg(err);
-      else { setMsg(null); setCode(''); setSentTo(addr); }
     };
     return (
       <div className="card">
         <h2>Conta</h2>
-        <p className="mini">Entre com seu e-mail para sincronizar o progresso entre celular e PC. Sem senha: você recebe um código.</p>
-        <form className="row" onSubmit={send}>
-          <input className="input" type="email" required placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <button className="chip" type="submit" disabled={sending || !email}>{sending ? 'enviando…' : 'enviar código'}</button>
+        <p className="mini">Entre com e-mail e senha para sincronizar o progresso entre celular e PC.</p>
+        <form onSubmit={submit}>
+          <div className="row">
+            <input className="input" type="email" name="email" autoComplete="email" required placeholder="seu@email.com"
+              value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="row">
+            <input className="input" type="password" name="password" autoComplete={creating ? 'new-password' : 'current-password'}
+              required minLength={6} placeholder={creating ? 'crie uma senha (mín. 6)' : 'senha'}
+              value={password} onChange={(e) => setPassword(e.target.value)} />
+            <button className="chip" type="submit" disabled={sending || !email || password.length < 6}>
+              {sending ? 'aguarde…' : creating ? 'criar conta' : 'entrar'}
+            </button>
+          </div>
         </form>
+        <button className="chip" type="button" onClick={() => { setCreating(!creating); setMsg(null); }}>
+          {creating ? 'já tenho conta: entrar' : 'não tenho conta: criar conta'}
+        </button>
         {msg && <div className="note">{msg}</div>}
       </div>
     );

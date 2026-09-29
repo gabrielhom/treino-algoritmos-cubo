@@ -41,6 +41,25 @@ function makeClient(sb: NonNullable<typeof supabase>): SyncClient {
 }
 const client: SyncClient | null = supabase ? makeClient(supabase) : null;
 
+/** Supabase auth errors in Portuguese; falls back to the original message. */
+export function authMessage(error: { code?: string; message: string }): string {
+  switch (error.code) {
+    case 'invalid_credentials': return 'E-mail ou senha incorretos.';
+    case 'email_not_confirmed': return 'E-mail ainda não confirmado. Abra o link que enviamos e depois entre aqui no app.';
+    case 'weak_password': return 'Senha fraca. Use pelo menos 6 caracteres.';
+    case 'user_already_exists':
+    case 'email_exists': return 'Já existe uma conta com este e-mail. Use "entrar".';
+    case 'email_address_invalid': return 'E-mail inválido.';
+    case 'signup_disabled': return 'Criação de contas desativada neste projeto.';
+    case 'over_email_send_rate_limit':
+    case 'over_request_rate_limit': return 'Muitas tentativas. Espere alguns minutos e tente de novo.';
+  }
+  if (/invalid login credentials/i.test(error.message)) return 'E-mail ou senha incorretos.';
+  if (/email not confirmed/i.test(error.message)) return 'E-mail ainda não confirmado. Abra o link que enviamos e depois entre aqui no app.';
+  if (/password should be/i.test(error.message)) return 'Senha fraca. Use pelo menos 6 caracteres.';
+  return error.message;
+}
+
 export function useSync(
   storeRef: React.RefObject<AttemptStore | null>,
   attemptsRef: React.RefObject<Attempt[]>,
@@ -90,24 +109,28 @@ export function useSync(
     return () => window.removeEventListener('online', sync);
   }, [status.session, sync]);
 
-  // Sends an e-mail with a one-time code (and a link as fallback). On iOS the link
-  // opens in Safari, whose storage is separate from the installed PWA, so the
-  // session would never reach the home-screen app: the code is typed in-app instead.
-  const signIn = useCallback(async (email: string) => {
+  // E-mail + password. Magic links/OTP e-mails were dropped: on iOS the link opens in
+  // Safari (storage separate from the installed PWA) and, without custom SMTP, the
+  // free plan's e-mail template can't be edited to include a code.
+  const signIn = useCallback(async (email: string, password: string) => {
     if (!supabase) return 'Sincronização não configurada.';
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin } });
-    return error ? error.message : null;
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return error ? authMessage(error) : null;
   }, []);
 
-  const verifyCode = useCallback(async (email: string, token: string) => {
+  /** Returns an error message, or `{ needsConfirmation }` when the account was created. */
+  const signUp = useCallback(async (email: string, password: string): Promise<string | { needsConfirmation: boolean }> => {
     if (!supabase) return 'Sincronização não configurada.';
-    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-    return error ? error.message : null;
+    const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
+    if (error) return authMessage(error);
+    // With "Confirm email" on, an already-registered address comes back with no identities and no error.
+    if (data.user && data.user.identities?.length === 0) return 'Já existe uma conta com este e-mail. Use "entrar".';
+    return { needsConfirmation: !data.session };
   }, []);
 
   const signOut = useCallback(async () => {
     await supabase?.auth.signOut();
   }, []);
 
-  return { status, sync, signIn, verifyCode, signOut };
+  return { status, sync, signIn, signUp, signOut };
 }

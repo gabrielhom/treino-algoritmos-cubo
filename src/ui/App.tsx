@@ -33,7 +33,7 @@ export function App() {
     openAttemptStore().then(async (s) => { storeRef.current = s; setAttempts(await s.load()); setMarks(await s.loadMarks()); });
   }, [setAttempts, setMarks]);
 
-  const { status: syncStatus, sync, signIn, verifyCode, signOut } = useSync(storeRef, attemptsRef, setAttempts, marksRef, setMarks);
+  const { status: syncStatus, sync, signIn, signUp, signOut } = useSync(storeRef, attemptsRef, setAttempts, marksRef, setMarks);
   const marksByKey = useMemo(() => new Map(marks.map((m) => [m.key, m])), [marks]);
 
   const set = getSet(app.setId);
@@ -133,7 +133,7 @@ export function App() {
       )}
       {view === 'settings' && (
         <Settings set={set} settings={settings} onChange={updateSettings} onReset={reset}
-          account={<Account status={syncStatus} pending={pendingOf(attempts).length} onSignIn={signIn} onVerify={verifyCode} onSignOut={signOut} onSync={sync} />} />
+          account={<Account status={syncStatus} pending={pendingOf(attempts).length} onSignIn={signIn} onSignUp={signUp} onSignOut={signOut} onSync={sync} />} />
       )}
       {view === 'help' && <Help set={set} />}
       {view === 'train' && (
