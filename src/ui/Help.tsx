@@ -3,7 +3,7 @@ import { Moves } from './Moves';
 
 export function Help({ set }: { set: AlgSet }) {
   return (
-    <section>
+    <section className="cols">
       <Moves />
       <div className="card help">
         <h2>O ciclo</h2>
