@@ -83,7 +83,7 @@ export function AlgChoice({ labels, value, onChange }: { labels: string[]; value
   if (labels.length < 2) return null;
   return (
     <div className="algchoice">
-      <span className="mini">Algoritmos para este caso:</span>
+      <span className="mini">Algoritmos para este caso (o escolhido vira o favorito, mostrado na lista e no treino):</span>
       <div className="chips">
         {labels.map((l, i) => (
           <button key={i} className={`chip mono${i === value ? ' on' : ''}`} aria-pressed={i === value} onClick={() => onChange(i)}><AlgText alg={l} /></button>

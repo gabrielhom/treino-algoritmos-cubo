@@ -193,6 +193,13 @@ describe('App', () => {
     expect(JSON.parse(localStorage.getItem('cube-trainer:settings')!).beginner).toBe(false);
     await click(byText('fechar'));
     expect($('dialog')).toBeNull();
+    // the picked alternative becomes the favorite shown on the card; the card's button cycles it
+    const card = $$('.casecard')[0];
+    expect(card.querySelector('.alg')!.textContent).toBe("R' F R F'");
+    const swap = [...card.querySelectorAll('button')].find((b) => b.textContent!.startsWith('trocar algoritmo'))!;
+    expect(swap.textContent).toMatch(/^trocar algoritmo \(2 de \d\)$/);
+    await click(swap);
+    expect(card.querySelector('.alg')!.textContent).not.toBe("R' F R F'");
   });
 });
 

@@ -1,5 +1,5 @@
 // Case detail sheet: the case on a 3D cube you can step through, move by move.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Cube3D } from '../diagram/Cube3D';
 import { usePlayer } from '../diagram/usePlayer';
 import { parse, type State } from '../engine/cube';
@@ -19,12 +19,14 @@ export function MarkSeg({ mark, onMark }: { mark: MarkStatus | null; onMark: (st
   );
 }
 
-export function CaseDetail({ set, c, start, mark, onMark, onTrain, onClose, beginner, onBeginner }: {
+export function CaseDetail({ set, c, start, mark, onMark, fav, onFav, onTrain, onClose, beginner, onBeginner }: {
   set: AlgSet;
   c: AlgCase;
   start: State;
   mark: MarkStatus | null;
   onMark: (status: MarkStatus | null) => void;
+  fav: number;
+  onFav: (i: number) => void;
   onTrain: () => void;
   onClose: () => void;
   beginner: boolean;
@@ -33,8 +35,7 @@ export function CaseDetail({ set, c, start, mark, onMark, onTrain, onClose, begi
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => { ref.current?.showModal(); }, []);
   const algs = [c.alg, ...c.alts];
-  const [pick, setPick] = useState(0);
-  const alg = algs[pick];
+  const alg = algs[fav];
   const moves = useMemo(() => parse(alg), [alg]);
   const player = usePlayer(start);
   const stepper = useAlgStepper(player, start, moves);
@@ -55,7 +56,7 @@ export function CaseDetail({ set, c, start, mark, onMark, onTrain, onClose, begi
           <Cube3D state={player.state} relevant={relevant} mirrored={false} anim={player.anim} size={200} label={`Caso ${c.id}`} />
         </div>
         <AlgSteps stepper={stepper} beginner={beginner} onBeginner={onBeginner} />
-        <AlgChoice labels={algs} value={pick} onChange={setPick} />
+        <AlgChoice labels={algs} value={fav} onChange={onFav} />
         <div className="row sheet-foot">
           <MarkSeg mark={mark} onMark={onMark} />
           <button className="btn primary" onClick={onTrain}>treinar este caso</button>
