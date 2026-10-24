@@ -16,13 +16,15 @@ export function caseStatesOf(set: AlgSet): Map<string | number, State> {
   return out;
 }
 
-export function Browse({ set, marks, progress, onTrain, onFocus, onMark, beginner, onBeginner }: {
+export function Browse({ set, marks, progress, onTrain, onFocus, onMark, favOf, onFav, beginner, onBeginner }: {
   set: AlgSet;
   marks: Map<string, CaseMark>;
   progress: Map<string | number, CaseState>;
   onTrain: (id: string | number) => void;
   onFocus: (ids: (string | number)[]) => void;
   onMark: (id: string | number, status: MarkStatus | null) => void;
+  favOf: (c: AlgCase) => number;
+  onFav: (c: AlgCase, i: number) => void;
   beginner: boolean;
   onBeginner: (on: boolean) => void;
 }) {
@@ -55,6 +57,8 @@ export function Browse({ set, marks, progress, onTrain, onFocus, onMark, beginne
     const relevant = set.relevantStickers(st, { mirrored: false });
     const m = markOf(c);
     const p = progress.get(c.id);
+    const algs = [c.alg, ...c.alts];
+    const fav = favOf(c);
     return (
       <div key={c.id} className={`card casecard${m ? ` ${m}` : ''}`}>
         <button className="caseopen" aria-label={`Ver caso ${c.id} passo a passo`} onClick={() => setOpen(c)}>
@@ -64,9 +68,11 @@ export function Browse({ set, marks, progress, onTrain, onFocus, onMark, beginne
               ? <Cube3D state={st} relevant={relevant} mirrored={false} size={150} label={`Caso ${c.id}`} />
               : <TopView state={st} relevant={relevant} size={140} />}
           </span>
-          <span className="mono alg"><AlgText alg={c.alg} /></span>
+          <span className="mono alg"><AlgText alg={algs[fav]} /></span>
         </button>
-        {c.alts.length > 0 && <div className="mini">+{c.alts.length} alternativa{c.alts.length > 1 ? 's' : ''}</div>}
+        {c.alts.length > 0 && (
+          <button className="chip" onClick={() => onFav(c, (fav + 1) % algs.length)}>trocar algoritmo ({fav + 1} de {algs.length})</button>
+        )}
         <div className="mini">{p?.seen_count ? `${p.seen_count}x · ${(p.total_ms / p.seen_count / 1000).toFixed(1)} s · peso ${weightOf(p)}` : 'nunca treinado'}</div>
         <div className="row" style={{ borderTop: 0, paddingBottom: 0 }}>
           <MarkSeg mark={m} onMark={(s) => onMark(c.id, s)} />
@@ -139,6 +145,7 @@ export function Browse({ set, marks, progress, onTrain, onFocus, onMark, beginne
       )}
       {open && (
         <CaseDetail key={`${set.id}/${open.id}`} set={set} c={open} start={states.get(open.id)!} mark={markOf(open)}
+          fav={favOf(open)} onFav={(i) => onFav(open, i)}
           onMark={(s) => onMark(open.id, s)} onTrain={() => onTrain(open.id)} onClose={() => setOpen(null)}
           beginner={beginner} onBeginner={onBeginner} />
       )}

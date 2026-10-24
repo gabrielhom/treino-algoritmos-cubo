@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SETS, getSet } from '../sets';
-import { foldCaseStates, newId, statesForSet, type Attempt, type CaseMark, type MarkStatus } from '../progress/model';
-import { loadSettings, openAttemptStore, saveSettings, settingsFor, type AppSettings, type AttemptStore } from '../progress/store';
+import type { AlgCase } from '../sets/types';
+import { caseKey, foldCaseStates, newId, statesForSet, type Attempt, type CaseMark, type MarkStatus } from '../progress/model';
+import { favIndexOf, loadSettings, openAttemptStore, saveSettings, settingsFor, type AppSettings, type AttemptStore } from '../progress/store';
 import { useTrainer, type AttemptInput } from '../trainer/useTrainer';
 import { selectedCases, type SetSettings } from '../trainer/trainer';
 import { pendingOf } from '../sync/sync';
@@ -42,6 +43,8 @@ export function App() {
   const selectSet = (id: string) => { updateApp({ ...app, setId: id }); setFocus(null); };
   const updateSettings = (s: SetSettings) => updateApp({ ...app, sets: { ...app.sets, [set.id]: s } });
   const setBeginner = (beginner: boolean) => updateApp({ ...app, beginner });
+  const favOf = (c: AlgCase) => favIndexOf(app, set.id, c);
+  const setFav = (c: AlgCase, i: number) => updateApp({ ...app, favAlgs: { ...app.favAlgs, [caseKey(set.id, c.id)]: [c.alg, ...c.alts][i] } });
 
   const allStates = useMemo(() => foldCaseStates(attempts), [attempts]);
   const caseStates = useMemo(() => statesForSet(allStates, set.id), [allStates, set.id]);
@@ -117,12 +120,13 @@ export function App() {
             </div>
           )}
           <Train active={active} settings={settings} caseState={active ? caseStates.get(active.case.id) : undefined} onRate={rate}
+            fav={active ? favOf(active.case) : 0} onFav={(i) => active && setFav(active.case, i)}
             beginner={app.beginner} onBeginner={setBeginner} />
         </>
       )}
       {view === 'browse' && (
         <Browse set={set} marks={marksByKey} progress={caseStates} onTrain={trainCase} onFocus={focusOn} onMark={mark}
-          beginner={app.beginner} onBeginner={setBeginner} />
+          favOf={favOf} onFav={setFav} beginner={app.beginner} onBeginner={setBeginner} />
       )}
       {view === 'progress' && (
         <Progress set={set} settings={settings} attempts={attempts} caseStates={caseStates} onTrain={trainCase} onFocus={focusOn} />

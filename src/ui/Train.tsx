@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Diagram } from '../diagram/Diagram';
 import { MoveIcon } from '../diagram/MoveIcon';
 import { usePlayer } from '../diagram/usePlayer';
@@ -9,11 +9,13 @@ import { AlgChoice, AlgSteps, useAlgStepper } from './AlgSteps';
 
 const fmtS = (ms: number) => (ms / 1000).toFixed(1);
 
-export function Train({ active, settings, caseState, onRate, beginner, onBeginner }: {
+export function Train({ active, settings, caseState, onRate, fav, onFav, beginner, onBeginner }: {
   active: ActiveCase | null;
   settings: SetSettings;
   caseState: CaseState | undefined;
   onRate: (r: Rating) => void;
+  fav: number;
+  onFav: (i: number) => void;
   beginner: boolean;
   onBeginner: (on: boolean) => void;
 }) {
@@ -23,10 +25,8 @@ export function Train({ active, settings, caseState, onRate, beginner, onBeginne
     if (revealed) setTimeout(() => solutionRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }), 30);
   }, [revealed]);
   const player = usePlayer(active?.state ?? SOLVED);
-  // A pick from a previous case is not among this case's arrays, so it falls back to the main alg.
-  const [picked, setPicked] = useState<string[] | null>(null);
   const options = useMemo(() => (active ? [active.solution, ...active.alts] : []), [active]);
-  const pick = picked ? Math.max(0, options.indexOf(picked)) : 0;
+  const pick = Math.min(fav, options.length - 1);
   const moves = useMemo(() => (active ? parse(displaySolution(active, options[pick])) : []), [active, options, pick]);
   const stepper = useAlgStepper(player, active?.state ?? SOLVED, moves);
 
@@ -71,7 +71,7 @@ export function Train({ active, settings, caseState, onRate, beginner, onBeginne
           {active.revealed && (
             <div className="solution" ref={solutionRef}>
               <AlgSteps stepper={stepper} beginner={beginner} onBeginner={onBeginner} />
-              <AlgChoice labels={options.map((a) => displaySolution(active, a))} value={pick} onChange={(i) => setPicked(options[i])} />
+              <AlgChoice labels={options.map((a) => displaySolution(active, a))} value={pick} onChange={onFav} />
               <div className="meta">
                 Reconhecimento: {fmtS(active.elapsedMs)} s{avg}
                 {active.postAuf ? ' · a primeira letra desfaz o giro aleatório' : ''}

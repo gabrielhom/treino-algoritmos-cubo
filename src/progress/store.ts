@@ -1,6 +1,7 @@
 // Local persistence. Attempts go to IndexedDB, with localStorage as fallback;
 // settings always live in localStorage.
-import type { Attempt, CaseMark } from './model';
+import { caseKey, type Attempt, type CaseMark } from './model';
+import type { AlgCase } from '../sets/types';
 import { DEFAULT_SETTINGS, type SetSettings } from '../trainer/trainer';
 
 export interface AttemptStore {
@@ -66,6 +67,8 @@ export interface AppSettings {
   sets: Record<string, SetSettings>;
   /** Draw each move of an algorithm next to its letter. */
   beginner: boolean;
+  /** Favorite alg per case (`set/case` -> alg text), shown in the list and in training. */
+  favAlgs: Record<string, string>;
 }
 
 const SETTINGS_KEY = 'cube-trainer:settings';
@@ -75,10 +78,10 @@ export function loadSettings(): AppSettings {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) {
       const saved = JSON.parse(raw) as Partial<AppSettings>;
-      return { setId: 'f2l', sets: {}, ...saved, beginner: saved.beginner ?? true };
+      return { setId: 'f2l', sets: {}, favAlgs: {}, ...saved, beginner: saved.beginner ?? true };
     }
   } catch { /* ignore */ }
-  return { setId: 'f2l', sets: {}, beginner: true };
+  return { setId: 'f2l', sets: {}, beginner: true, favAlgs: {} };
 }
 
 export function saveSettings(s: AppSettings) {
@@ -89,4 +92,9 @@ export function saveSettings(s: AppSettings) {
 
 export function settingsFor(app: AppSettings, setId: string): SetSettings {
   return app.sets[setId] ?? DEFAULT_SETTINGS;
+}
+
+/** Index in [alg, ...alts] of the favorite alg; 0 (the main alg) when none or no longer listed. */
+export function favIndexOf(app: AppSettings, setId: string, c: AlgCase): number {
+  return c.alts.indexOf(app.favAlgs[caseKey(setId, c.id)]) + 1;
 }
