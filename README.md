@@ -1,6 +1,6 @@
 # Treino de algoritmos de cubo mágico
 
-Treino de reconhecimento de casos de F2L (41), OLL (57) e PLL (21): o app mostra um caso em 3D, você monta no cubo, resolve, confere a solução (com animação, se quiser) e avalia. A aba "Como usar" tem cada movimento da notação animado. Casos difíceis voltam mais vezes. Funciona sem login, neste navegador; com login por e-mail, o progresso sincroniza entre celular e PC. É um PWA: dá para instalar na tela inicial do celular e usar offline.
+Treino de reconhecimento de casos de F2L (41), OLL (57) e PLL (21), além de 2-look OLL (10 casos) e 2-look PLL (6 casos) para quem está começando: o app mostra um caso em 3D, você monta no cubo, resolve, confere a solução (com animação, se quiser) e avalia. A aba "Como usar" tem cada movimento da notação animado. Casos difíceis voltam mais vezes. Funciona sem login, neste navegador; com login por e-mail, o progresso sincroniza entre celular e PC. É um PWA: dá para instalar na tela inicial do celular e usar offline.
 
 ## Rodar local
 
