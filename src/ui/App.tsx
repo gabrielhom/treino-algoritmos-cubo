@@ -38,17 +38,10 @@ export function App() {
 
   const set = getSet(app.setId);
   const settings = settingsFor(app, set.id);
-  const selectSet = (id: string) => {
-    const nextApp = { ...app, setId: id };
-    setApp(nextApp);
-    saveSettings(nextApp);
-    setFocus(null);
-  };
-  const updateSettings = (s: SetSettings) => {
-    const nextApp = { ...app, sets: { ...app.sets, [set.id]: s } };
-    setApp(nextApp);
-    saveSettings(nextApp);
-  };
+  const updateApp = (nextApp: AppSettings) => { setApp(nextApp); saveSettings(nextApp); };
+  const selectSet = (id: string) => { updateApp({ ...app, setId: id }); setFocus(null); };
+  const updateSettings = (s: SetSettings) => updateApp({ ...app, sets: { ...app.sets, [set.id]: s } });
+  const setBeginner = (beginner: boolean) => updateApp({ ...app, beginner });
 
   const allStates = useMemo(() => foldCaseStates(attempts), [attempts]);
   const caseStates = useMemo(() => statesForSet(allStates, set.id), [allStates, set.id]);
@@ -66,6 +59,7 @@ export function App() {
   const { active, next, reveal, rate } = trainer;
 
   useEffect(() => {
+    if (view !== 'train') return;
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (t.tagName === 'INPUT') return;
@@ -77,7 +71,7 @@ export function App() {
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [active, next, reveal, rate]);
+  }, [view, active, next, reveal, rate]);
 
   const reset = () => {
     if (confirm('Zerar pesos e tempos deste navegador?')) { setAttempts([]); void storeRef.current?.clear(); }
@@ -122,17 +116,19 @@ export function App() {
               <button className="chip" onClick={() => setFocus(null)}>voltar ao sorteio normal</button>
             </div>
           )}
-          <Train active={active} settings={settings} caseState={active ? caseStates.get(active.case.id) : undefined} onRate={rate} />
+          <Train active={active} settings={settings} caseState={active ? caseStates.get(active.case.id) : undefined} onRate={rate}
+            beginner={app.beginner} onBeginner={setBeginner} />
         </>
       )}
       {view === 'browse' && (
-        <Browse set={set} marks={marksByKey} progress={caseStates} onTrain={trainCase} onFocus={focusOn} onMark={mark} />
+        <Browse set={set} marks={marksByKey} progress={caseStates} onTrain={trainCase} onFocus={focusOn} onMark={mark}
+          beginner={app.beginner} onBeginner={setBeginner} />
       )}
       {view === 'progress' && (
         <Progress set={set} settings={settings} attempts={attempts} caseStates={caseStates} onTrain={trainCase} onFocus={focusOn} />
       )}
       {view === 'settings' && (
-        <Settings set={set} settings={settings} onChange={updateSettings} onReset={reset}
+        <Settings set={set} settings={settings} onChange={updateSettings} onReset={reset} beginner={app.beginner} onBeginner={setBeginner}
           account={<Account status={syncStatus} pending={pendingOf(attempts).length} onSignIn={signIn} onSignUp={signUp} onSignOut={signOut} onSync={sync} />} />
       )}
       {view === 'help' && <Help set={set} />}

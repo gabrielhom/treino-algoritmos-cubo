@@ -64,6 +64,8 @@ export async function openAttemptStore(): Promise<AttemptStore> {
 export interface AppSettings {
   setId: string;
   sets: Record<string, SetSettings>;
+  /** Draw each move of an algorithm next to its letter. */
+  beginner: boolean;
 }
 
 const SETTINGS_KEY = 'cube-trainer:settings';
@@ -71,9 +73,12 @@ const SETTINGS_KEY = 'cube-trainer:settings';
 export function loadSettings(): AppSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    if (raw) return JSON.parse(raw) as AppSettings;
+    if (raw) {
+      const saved = JSON.parse(raw) as Partial<AppSettings>;
+      return { setId: 'f2l', sets: {}, ...saved, beginner: saved.beginner ?? true };
+    }
   } catch { /* ignore */ }
-  return { setId: 'f2l', sets: {} };
+  return { setId: 'f2l', sets: {}, beginner: true };
 }
 
 export function saveSettings(s: AppSettings) {

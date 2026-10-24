@@ -1,17 +1,21 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Diagram } from '../diagram/Diagram';
+import { MoveIcon } from '../diagram/MoveIcon';
 import { usePlayer } from '../diagram/usePlayer';
 import { parse, SOLVED } from '../engine/cube';
 import type { CaseState, Rating } from '../progress/model';
 import { displaySolution, type ActiveCase, type SetSettings } from '../trainer/trainer';
+import { AlgChoice, AlgSteps, useAlgStepper } from './AlgSteps';
 
 const fmtS = (ms: number) => (ms / 1000).toFixed(1);
 
-export function Train({ active, settings, caseState, onRate }: {
+export function Train({ active, settings, caseState, onRate, beginner, onBeginner }: {
   active: ActiveCase | null;
   settings: SetSettings;
   caseState: CaseState | undefined;
   onRate: (r: Rating) => void;
+  beginner: boolean;
+  onBeginner: (on: boolean) => void;
 }) {
   const solutionRef = useRef<HTMLDivElement>(null);
   const revealed = !!active?.revealed;
@@ -19,9 +23,12 @@ export function Train({ active, settings, caseState, onRate }: {
     if (revealed) setTimeout(() => solutionRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }), 30);
   }, [revealed]);
   const player = usePlayer(active?.state ?? SOLVED);
-  const caseState_ = active?.state;
-  const reset = player.reset;
-  useEffect(() => { if (caseState_) reset(caseState_); }, [caseState_, reset]);
+  // A pick from a previous case is not among this case's arrays, so it falls back to the main alg.
+  const [picked, setPicked] = useState<string[] | null>(null);
+  const options = useMemo(() => (active ? [active.solution, ...active.alts] : []), [active]);
+  const pick = picked ? Math.max(0, options.indexOf(picked)) : 0;
+  const moves = useMemo(() => (active ? parse(displaySolution(active, options[pick])) : []), [active, options, pick]);
+  const stepper = useAlgStepper(player, active?.state ?? SOLVED, moves);
 
   if (!active) {
     return (
@@ -55,25 +62,13 @@ export function Train({ active, settings, caseState, onRate }: {
         <div className="scramble">
           <div className="lbl">Aplique no cubo montado:</div>
           <div className="moves">
-            {active.scramble.map((m, i) => <span key={i} className={`mv${isAuf(i) ? ' auf' : ''}`}>{m}</span>)}
+            {active.scramble.map((m, i) => <span key={i} className={`mv${isAuf(i) ? ' auf' : ''}${beginner ? ' drawn' : ''}`}>{beginner && <MoveIcon move={m} size={36} />}{m}</span>)}
           </div>
         </div>
         {active.revealed && (
           <div className="solution" ref={solutionRef}>
-            <div className="alg">{displaySolution(active, active.solution)}</div>
-            <div className="chips" style={{ marginTop: 8 }}>
-              <button className="chip" disabled={player.playing} onClick={() => { player.reset(active.state); player.play(parse(displaySolution(active, active.solution))); }}>
-                {player.playing ? 'animando…' : 'ver animado'}
-              </button>
-              <button className="chip" onClick={() => player.reset(active.state)}>voltar ao caso</button>
-            </div>
-            <div className="alt">
-              {active.alts.length > 0 && (
-                <>Também: {active.alts.map((a, i) => (
-                  <span key={i}>{i > 0 && <> &nbsp;|&nbsp; </>}<code>{displaySolution(active, a)}</code></span>
-                ))}</>
-              )}
-            </div>
+            <AlgSteps stepper={stepper} beginner={beginner} onBeginner={onBeginner} />
+            <AlgChoice labels={options.map((a) => displaySolution(active, a))} value={pick} onChange={(i) => setPicked(options[i])} />
             <div className="meta">
               Reconhecimento: {fmtS(active.elapsedMs)} s{avg}
               {active.postAuf ? ' · a primeira letra desfaz o giro aleatório' : ''}
