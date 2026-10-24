@@ -121,7 +121,7 @@ header .seg button{flex:none;white-space:nowrap}
 .stephead{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .stephead .chip{padding:6px 10px;font-size:13px}
 .alg.tiles,.alg.compact{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap}
-.alg.tiles{gap:6px}
+.alg.tiles{gap:14px 6px;align-items:center;padding-top:7px}
 .alg.compact{gap:2px 4px}
 .step{display:flex;flex-direction:column;align-items:center;gap:2px;font:inherit;color:var(--ink);background:var(--surface);cursor:pointer;transition:opacity .15s,background .15s}
 .tiles .step{width:58px;padding:5px 2px 4px;border:1px solid var(--line);border-radius:10px}
@@ -131,6 +131,18 @@ header .seg button{flex:none;white-space:nowrap}
 .step.done{opacity:.4}
 .step.next{background:var(--soft);border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .compact .step.next{box-shadow:inset 0 -2px 0 var(--ink)}
+/* trigger groups (sexy move, sledgehammer...): a captioned box around the tiles, parentheses in compact text */
+.alg .trig ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap}
+.tiles .trig{position:relative;max-width:100%;padding:4px;border:1.5px solid var(--line-2);border-radius:14px}
+.tiles .trig ol{gap:6px}
+.trigname{position:absolute;top:-8px;left:9px;padding:0 4px;background:var(--surface);color:var(--ink-2);font-size:11px;font-weight:600;line-height:14px;white-space:nowrap}
+.trigtext{white-space:nowrap}
+.compact .trig{display:flex;align-items:center}
+.compact .trig ol{gap:2px 4px}
+.compact .trigname{display:none}
+.compact .trig::before,.compact .trig::after{font:600 20px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink-2)}
+.compact .trig::before{content:"(";content:"(" / "";margin-right:-3px}
+.compact .trig::after{content:")";content:")" / "";margin-left:-3px}
 .moveicon{display:block}
 .moveicon path{fill:none;stroke-linecap:round;stroke-linejoin:round}
 .moveicon .halo{stroke:#fff;stroke-width:1.25}

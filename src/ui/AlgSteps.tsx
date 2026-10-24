@@ -1,7 +1,8 @@
 // Step through an algorithm on a usePlayer cube, one move at a time. The cube state is the
 // only source of truth: the number of moves done is read back by matching it to the prefixes.
-import { useEffect, useMemo } from 'react';
-import { applyMove, invert, type State } from '../engine/cube';
+import { Fragment, useEffect, useMemo } from 'react';
+import { applyMove, invert, parse, type State } from '../engine/cube';
+import { segment, segmentText } from '../engine/triggers';
 import { MoveIcon } from '../diagram/MoveIcon';
 import type { usePlayer } from '../diagram/usePlayer';
 
@@ -42,6 +43,15 @@ export function AlgSteps({ stepper, beginner, onBeginner }: {
   onBeginner: (on: boolean) => void;
 }) {
   const { moves, done, playing } = stepper;
+  const step = (m: string, i: number) => (
+    <li key={i}>
+      <button className={`step${i < done ? ' done' : i === done ? ' next' : ''}`} aria-current={i === done ? 'step' : undefined}
+        aria-label={`Movimento ${i + 1}: ${m}`} onClick={() => stepper.jump(i)}>
+        {beginner && <MoveIcon move={m} />}
+        <span className="mono">{m}</span>
+      </button>
+    </li>
+  );
   return (
     <div className="algsteps">
       <div className="stephead">
@@ -51,15 +61,12 @@ export function AlgSteps({ stepper, beginner, onBeginner }: {
         </button>
       </div>
       <ol className={`alg ${beginner ? 'tiles' : 'compact'}`} aria-label="Movimentos do algoritmo">
-        {moves.map((m, i) => (
-          <li key={i}>
-            <button className={`step${i < done ? ' done' : i === done ? ' next' : ''}`} aria-current={i === done ? 'step' : undefined}
-              aria-label={`Movimento ${i + 1}: ${m}`} onClick={() => stepper.jump(i)}>
-              {beginner && <MoveIcon move={m} />}
-              <span className="mono">{m}</span>
-            </button>
-          </li>
-        ))}
+        {segment(moves).map((s) => {
+          const steps = s.moves.map((m, k) => step(m, s.start + k));
+          return s.trigger
+            ? <li key={s.start} className="trig"><span className="trigname" aria-hidden>{s.trigger}</span><ol aria-label={s.trigger}>{steps}</ol></li>
+            : steps;
+        })}
       </ol>
       <div className="stepctl">
         <button className="ctl" aria-label="Voltar ao caso" onClick={stepper.restart}>⏮</button>
@@ -79,9 +86,16 @@ export function AlgChoice({ labels, value, onChange }: { labels: string[]; value
       <span className="mini">Algoritmos para este caso:</span>
       <div className="chips">
         {labels.map((l, i) => (
-          <button key={i} className={`chip mono${i === value ? ' on' : ''}`} aria-pressed={i === value} onClick={() => onChange(i)}>{l}</button>
+          <button key={i} className={`chip mono${i === value ? ' on' : ''}`} aria-pressed={i === value} onClick={() => onChange(i)}><AlgText alg={l} /></button>
         ))}
       </div>
     </div>
   );
+}
+
+/** The alg as text with triggers in parentheses; a trigger never breaks across lines. */
+export function AlgText({ alg }: { alg: string }) {
+  return segment(parse(alg)).map((s, i) => (
+    <Fragment key={s.start}>{i > 0 && ' '}{s.trigger ? <span className="trigtext">{segmentText(s)}</span> : segmentText(s)}</Fragment>
+  ));
 }
