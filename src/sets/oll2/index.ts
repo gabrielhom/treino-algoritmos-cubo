@@ -5,21 +5,21 @@ import type { AlgCase, AlgSet } from '../types';
 import { CORNER_STICKERS, LL_HELP_STEPS, allUYellow, inTopLayerScope, orientedCounts, randomSetup } from '../ll';
 import { CASES as PLL_CASES } from '../pll';
 
-export const GROUPS = ['Cruz (arestas)', 'Cantos'];
+export const GROUPS = ['1º olhar · arestas (cruz)', '2º olhar · cantos'];
 const G = Object.fromEntries(GROUPS.map((g, i) => [g, i])) as Record<string, number>;
 const c = (id: string, group: string, alg: string, alts: string[] = []): AlgCase => ({ id, group: G[group], alg, alts });
 
 export const CASES: AlgCase[] = [
-  c('Ponto', 'Cruz (arestas)', "F R U R' U' F' f R U R' U' f'"),
-  c('L', 'Cruz (arestas)', "f R U R' U' f'"),
-  c('Linha', 'Cruz (arestas)', "F R U R' U' F'"),
-  c('Sune', 'Cantos', "R U R' U R U2 R'"),
-  c('Antisune', 'Cantos', "R U2 R' U' R U' R'"),
-  c('H', 'Cantos', "R U2 R' U' R U R' U' R U' R'"),
-  c('Pi', 'Cantos', "R U2 R2 U' R2 U' R2 U2 R"),
-  c('Faróis', 'Cantos', "R2 D' R U2 R' D R U2 R"),
-  c('T', 'Cantos', "r U R' U' r' F R F'"),
-  c('Gravata', 'Cantos', "F' r U R' U' r' F R"),
+  c('Ponto', '1º olhar · arestas (cruz)', "F R U R' U' F' f R U R' U' f'"),
+  c('L', '1º olhar · arestas (cruz)', "f R U R' U' f'"),
+  c('Linha', '1º olhar · arestas (cruz)', "F R U R' U' F'"),
+  c('Sune', '2º olhar · cantos', "R U R' U R U2 R'"),
+  c('Antisune', '2º olhar · cantos', "R U2 R' U' R U' R'"),
+  c('H', '2º olhar · cantos', "R U2 R' U' R U R' U' R U' R'"),
+  c('Pi', '2º olhar · cantos', "R U2 R2 U' R2 U' R2 U2 R"),
+  c('Faróis', '2º olhar · cantos', "R2 D' R U2 R' D R U2 R"),
+  c('T', '2º olhar · cantos', "r U R' U' r' F R F'"),
+  c('Gravata', '2º olhar · cantos', "F' r U R' U' r' F R"),
 ];
 
 export const oll2: AlgSet = {

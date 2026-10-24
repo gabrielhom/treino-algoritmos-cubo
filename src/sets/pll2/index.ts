@@ -3,17 +3,17 @@ import { inTopLayer } from '../../engine/cube';
 import type { AlgCase, AlgSet } from '../types';
 import { CORNER_STICKERS, LL_HELP_STEPS, cornersInPlaceUpToAuf, inTopLayerScope, solvedUpToAuf } from '../ll';
 
-export const GROUPS = ['Cantos', 'Arestas'];
+export const GROUPS = ['1º olhar · cantos', '2º olhar · arestas'];
 const G = Object.fromEntries(GROUPS.map((g, i) => [g, i])) as Record<string, number>;
 const c = (id: string, group: string, alg: string, alts: string[] = []): AlgCase => ({ id, group: G[group], alg, alts });
 
 export const CASES: AlgCase[] = [
-  c('Faróis', 'Cantos', "R U R' U' R' F R2 U' R' U' R U R' F'"),
-  c('Diagonal', 'Cantos', "F R U' R' U' R U R' F' R U R' U' R' F R F'"),
-  c('Ua', 'Arestas', "R U' R U R U R U' R' U' R2", ["M2 U M U2 M' U M2"]),
-  c('Ub', 'Arestas', "R2 U R U R' U' R' U' R' U R'", ["M2 U' M U2 M' U' M2"]),
-  c('H', 'Arestas', 'M2 U M2 U2 M2 U M2'),
-  c('Z', 'Arestas', "M' U' M2 U' M2 U' M' U2 M2"),
+  c('Faróis', '1º olhar · cantos', "R U R' U' R' F R2 U' R' U' R U R' F'"),
+  c('Diagonal', '1º olhar · cantos', "F R U' R' U' R U R' F' R U R' U' R' F R F'"),
+  c('Ua', '2º olhar · arestas', "R U' R U R U R U' R' U' R2", ["M2 U M U2 M' U M2"]),
+  c('Ub', '2º olhar · arestas', "R2 U R U R' U' R' U' R' U R'", ["M2 U' M U2 M' U' M2"]),
+  c('H', '2º olhar · arestas', 'M2 U M2 U2 M2 U M2'),
+  c('Z', '2º olhar · arestas', "M' U' M2 U' M2 U' M' U2 M2"),
 ];
 
 export const pll2: AlgSet = {

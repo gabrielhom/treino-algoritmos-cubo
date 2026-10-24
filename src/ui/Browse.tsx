@@ -50,6 +50,32 @@ export function Browse({ set, marks, progress, onTrain, onFocus, onMark, beginne
     <button key={label} className={`chip${on ? ' on' : ''}`} onClick={onClick}>{label}</button>
   );
 
+  const caseCard = (c: AlgCase) => {
+    const st = states.get(c.id)!;
+    const relevant = set.relevantStickers(st, { mirrored: false });
+    const m = markOf(c);
+    const p = progress.get(c.id);
+    return (
+      <div key={c.id} className={`card casecard${m ? ` ${m}` : ''}`}>
+        <button className="caseopen" aria-label={`Ver caso ${c.id} passo a passo`} onClick={() => setOpen(c)}>
+          <span className="caselabel"><span>Caso <b>{c.id}</b></span></span>
+          <span className="thumb">
+            {set.view === 'f2l'
+              ? <Cube3D state={st} relevant={relevant} mirrored={false} size={150} label={`Caso ${c.id}`} />
+              : <TopView state={st} relevant={relevant} size={140} />}
+          </span>
+          <span className="mono alg"><AlgText alg={c.alg} /></span>
+        </button>
+        {c.alts.length > 0 && <div className="mini">+{c.alts.length} alternativa{c.alts.length > 1 ? 's' : ''}</div>}
+        <div className="mini">{p?.seen_count ? `${p.seen_count}x · ${(p.total_ms / p.seen_count / 1000).toFixed(1)} s · peso ${weightOf(p)}` : 'nunca treinado'}</div>
+        <div className="row" style={{ borderTop: 0, paddingBottom: 0 }}>
+          <MarkSeg mark={m} onMark={(s) => onMark(c.id, s)} />
+          <button className="chip" onClick={() => onTrain(c.id)}>treinar</button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <section>
       <div className="card">
@@ -94,34 +120,20 @@ export function Browse({ set, marks, progress, onTrain, onFocus, onMark, beginne
         </div>
       </div>
 
-      <div className="grid">
-        {shown.map((c) => {
-          const st = states.get(c.id)!;
-          const relevant = set.relevantStickers(st, { mirrored: false });
-          const m = markOf(c);
-          const p = progress.get(c.id);
-          return (
-            <div key={c.id} className={`card casecard${m ? ` ${m}` : ''}`}>
-              <button className="caseopen" aria-label={`Ver caso ${c.id} passo a passo`} onClick={() => setOpen(c)}>
-                <span className="caselabel"><span>Caso <b>{c.id}</b></span><span>{set.groups[c.group]}</span></span>
-                <span className="thumb">
-                  {set.view === 'f2l'
-                    ? <Cube3D state={st} relevant={relevant} mirrored={false} size={150} label={`Caso ${c.id}`} />
-                    : <TopView state={st} relevant={relevant} size={140} />}
-                </span>
-                <span className="mono alg"><AlgText alg={c.alg} /></span>
-              </button>
-              {c.alts.length > 0 && <div className="mini">+{c.alts.length} alternativa{c.alts.length > 1 ? 's' : ''}</div>}
-              <div className="mini">{p?.seen_count ? `${p.seen_count}x · ${(p.total_ms / p.seen_count / 1000).toFixed(1)} s · peso ${weightOf(p)}` : 'nunca treinado'}</div>
-              <div className="row" style={{ borderTop: 0, paddingBottom: 0 }}>
-                <MarkSeg mark={m} onMark={(s) => onMark(c.id, s)} />
-                <button className="chip" onClick={() => onTrain(c.id)}>treinar</button>
-              </div>
+      {set.groups.map((name, g) => {
+        const cases = shown.filter((c) => c.group === g);
+        if (!cases.length) return null;
+        return (
+          <div key={g} className="groupsec">
+            <div className="grouphead">
+              <h2>{name} <span className="mini">{cases.length}</span></h2>
+              <button className="chip" onClick={() => onFocus(cases.map((c) => c.id))}>treinar este grupo</button>
             </div>
-          );
-        })}
-        {shown.length === 0 && <div className="empty">Nenhum caso com esses filtros.</div>}
-      </div>
+            <div className="grid">{cases.map(caseCard)}</div>
+          </div>
+        );
+      })}
+      {shown.length === 0 && <div className="empty">Nenhum caso com esses filtros.</div>}
       {set.view === 'f2l' && (
         <div className="note">Os diagramas mostram o caso no slot direito, sem giro. Só o canto e a aresta coloridos importam; o resto da camada de cima fica cinza.</div>
       )}
