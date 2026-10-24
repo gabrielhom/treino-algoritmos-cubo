@@ -193,3 +193,7 @@ dialog.sheet::backdrop{background:rgba(0,0,0,.5)}
   .sheet-cube svg{width:100%;height:auto}
   .sheet-in>.algsteps,.sheet-in>.algchoice,.sheet-foot{grid-column:2}
 }
+.groupsec{margin-top:18px}
+.grouphead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 2px}
+.grouphead h2{margin:0}
+.groupsec .grid{margin-top:8px}
