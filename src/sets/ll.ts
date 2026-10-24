@@ -28,6 +28,8 @@ const TOP_PIECES: number[][] = (() => {
   return [...groups.values()];
 })();
 const isCorner = (stickers: number[]) => stickers.length === 3;
+/** Positions of every top-layer corner sticker (side strips included). */
+export const CORNER_STICKERS = new Set(TOP_PIECES.filter(isCorner).flat());
 
 /** Numbers of top-layer corners and edges whose U sticker points up. */
 export function orientedCounts(state: State): { corners: number; edges: number } {
@@ -49,6 +51,10 @@ export function homeCounts(state: State): { corners: number; edges: number } {
   }
   return { corners, edges };
 }
+
+/** All four top-layer corners in place for some AUF. */
+export const cornersInPlaceUpToAuf = (state: State) =>
+  [[], ['U'], ['U2'], ["U'"]].some((auf) => homeCounts(apply(state, auf)).corners === 4);
 
 export const inTopLayerScope = (k: number) => inTopLayer(k);
 

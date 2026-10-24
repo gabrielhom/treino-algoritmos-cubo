@@ -9,11 +9,13 @@ function groupRange(set: AlgSet, g: number): string {
   return contiguous && ids.length > 1 ? `${ids[0]}–${ids[ids.length - 1]}` : `${ids.length}`;
 }
 
-export function Settings({ set, settings, onChange, onReset, account }: {
+export function Settings({ set, settings, onChange, onReset, beginner, onBeginner, account }: {
   set: AlgSet;
   settings: SetSettings;
   onChange: (s: SetSettings) => void;
   onReset: () => void;
+  beginner: boolean;
+  onBeginner: (on: boolean) => void;
   account?: ReactNode;
 }) {
   const toggleGroup = (g: number) => {
@@ -22,6 +24,14 @@ export function Settings({ set, settings, onChange, onReset, account }: {
   };
   return (
     <section>
+      <div className="card">
+        <h2>Modo iniciante</h2>
+        <div className="row">
+          <div><div className="t">Mostrar o desenho de cada giro</div><div className="d">Cada letra do algoritmo ganha um cubinho com a camada que gira e a seta do sentido</div></div>
+          <button className={`switch${beginner ? ' on' : ''}`} role="switch" aria-checked={beginner} aria-label="Modo iniciante"
+            onClick={() => onBeginner(!beginner)} />
+        </div>
+      </div>
       <div className="card">
         <h2>Grupos no sorteio</h2>
         <div className="chips">

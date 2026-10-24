@@ -15,6 +15,11 @@ const $$ = (sel: string) => [...document.querySelectorAll(sel)] as HTMLElement[]
 const byText = (text: string) => $$('button').find((b) => b.textContent === text)!;
 const click = async (el: HTMLElement) => act(async () => { el.click(); });
 const flush = () => act(async () => { await Promise.resolve(); });
+const wait = (ms: number) => act(() => new Promise<void>((r) => setTimeout(r, ms)));
+
+// jsdom has <dialog> but not its modal API.
+HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
+HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); this.dispatchEvent(new Event('close')); };
 
 beforeEach(async () => {
   localStorage.clear();
@@ -36,7 +41,8 @@ describe('App', () => {
     expect(Number($('.caselabel b').textContent)).toBeGreaterThanOrEqual(1);
     expect(Number($('.caselabel b').textContent)).toBeLessThanOrEqual(4);
     expect($$('.mv').length).toBeGreaterThan(0);
-    expect($$('svg').length).toBe(2); // 3D + top view
+    expect($$('.diagram svg').length).toBe(2); // 3D + top view
+    expect($$('.mv .moveicon').length).toBe($$('.mv').length); // beginner mode draws every scramble move
     expect($$('svg rect').length).toBe(21);
     expect($$('svg polygon').length).toBeGreaterThan(27);
     expect($$('.dgl')[0].textContent).toBe('cima · frente · direita');
@@ -163,4 +169,30 @@ describe('App', () => {
     expect($('.caselabel b').textContent).toBe('41');
     expect($('.caselabel span:last-child').textContent).toBe('Canto e aresta no slot');
   });
+
+  it('cases tab: a case opens a sheet that steps through the alg with a drawing per move', async () => {
+    await click(byText('Casos'));
+    await click($$('.casecard .caseopen')[0]);
+    const dialog = $('dialog[open]');
+    expect(dialog.querySelector('h2')!.textContent).toBe('Caso 1');
+    const tiles = () => [...dialog.querySelectorAll('.step')];
+    expect(tiles().map((t) => t.textContent)).toEqual(['U', 'R', "U'", "R'"]);
+    expect(tiles().filter((t) => t.querySelector('svg')).length).toBe(4);
+    expect(dialog.querySelector('.stephead .mini')!.textContent).toBe('0 de 4 movimentos');
+    await click(byText('▶'));
+    await wait(900);
+    expect(tiles().map((t) => t.className)).toEqual(['step done', 'step next', 'step', 'step']);
+    expect(dialog.querySelector('.stephead .mini')!.textContent).toBe('1 de 4 movimentos');
+    await click(byText('⏮'));
+    expect(tiles()[0].className).toBe('step next');
+    // the alternative replaces the moves; the drawings can be turned off and that persists
+    await click(byText("R' F R F'"));
+    expect(tiles().map((t) => t.textContent)).toEqual(["R'", 'F', 'R', "F'"]);
+    await click(byText('desenhos: ligado'));
+    expect(tiles().filter((t) => t.querySelector('svg')).length).toBe(0);
+    expect(JSON.parse(localStorage.getItem('cube-trainer:settings')!).beginner).toBe(false);
+    await click(byText('fechar'));
+    expect($('dialog')).toBeNull();
+  });
 });
+

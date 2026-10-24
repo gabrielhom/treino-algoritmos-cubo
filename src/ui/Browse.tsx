@@ -1,4 +1,5 @@
 // "Casos": browse every case of the set with diagram, algorithm, filters and a manual mark.
+// Tapping a case opens its detail sheet.
 import { useMemo, useState } from 'react';
 import { apply, invert, normalizeOrientation, parse, SOLVED, type State } from '../engine/cube';
 import { Cube3D } from '../diagram/Cube3D';
@@ -6,8 +7,7 @@ import { TopView } from '../diagram/Diagram';
 import type { CaseMark, CaseState, MarkStatus } from '../progress/model';
 import type { AlgCase, AlgSet } from '../sets/types';
 import { weightOf } from '../trainer/trainer';
-
-export const MARK_LABEL: Record<MarkStatus, string> = { learning: 'aprendendo', known: 'sei' };
+import { CaseDetail, MarkSeg } from './CaseDetail';
 
 export function caseStatesOf(set: AlgSet): Map<string | number, State> {
   const out = new Map<string | number, State>();
@@ -15,17 +15,20 @@ export function caseStatesOf(set: AlgSet): Map<string | number, State> {
   return out;
 }
 
-export function Browse({ set, marks, progress, onTrain, onFocus, onMark }: {
+export function Browse({ set, marks, progress, onTrain, onFocus, onMark, beginner, onBeginner }: {
   set: AlgSet;
   marks: Map<string, CaseMark>;
   progress: Map<string | number, CaseState>;
   onTrain: (id: string | number) => void;
   onFocus: (ids: (string | number)[]) => void;
   onMark: (id: string | number, status: MarkStatus | null) => void;
+  beginner: boolean;
+  onBeginner: (on: boolean) => void;
 }) {
   const [group, setGroup] = useState<number | null>(null);
   const [status, setStatus] = useState<'all' | MarkStatus | 'none'>('all');
   const [picks, setPicks] = useState<Record<string, string | null>>({});
+  const [open, setOpen] = useState<AlgCase | null>(null);
   const states = useMemo(() => caseStatesOf(set), [set]);
   const markOf = (c: AlgCase) => marks.get(`${set.id}/${c.id}`)?.status ?? null;
 
@@ -98,21 +101,19 @@ export function Browse({ set, marks, progress, onTrain, onFocus, onMark }: {
           const p = progress.get(c.id);
           return (
             <div key={c.id} className={`card casecard${m ? ` ${m}` : ''}`}>
-              <div className="caselabel"><span>Caso <b>{c.id}</b></span><span>{set.groups[c.group]}</span></div>
-              <div className="thumb">
-                {set.view === 'f2l'
-                  ? <Cube3D state={st} relevant={relevant} mirrored={false} size={150} label={`Caso ${c.id}`} />
-                  : <TopView state={st} relevant={relevant} size={140} />}
-              </div>
-              <div className="mono alg">{c.alg}</div>
+              <button className="caseopen" aria-label={`Ver caso ${c.id} passo a passo`} onClick={() => setOpen(c)}>
+                <span className="caselabel"><span>Caso <b>{c.id}</b></span><span>{set.groups[c.group]}</span></span>
+                <span className="thumb">
+                  {set.view === 'f2l'
+                    ? <Cube3D state={st} relevant={relevant} mirrored={false} size={150} label={`Caso ${c.id}`} />
+                    : <TopView state={st} relevant={relevant} size={140} />}
+                </span>
+                <span className="mono alg">{c.alg}</span>
+              </button>
               {c.alts.length > 0 && <div className="mini">+{c.alts.length} alternativa{c.alts.length > 1 ? 's' : ''}</div>}
               <div className="mini">{p?.seen_count ? `${p.seen_count}x · ${(p.total_ms / p.seen_count / 1000).toFixed(1)} s · peso ${weightOf(p)}` : 'nunca treinado'}</div>
               <div className="row" style={{ borderTop: 0, paddingBottom: 0 }}>
-                <div className="seg">
-                  {(['learning', 'known'] as MarkStatus[]).map((s) => (
-                    <button key={s} className={m === s ? 'on' : ''} onClick={() => onMark(c.id, m === s ? null : s)}>{MARK_LABEL[s]}</button>
-                  ))}
-                </div>
+                <MarkSeg mark={m} onMark={(s) => onMark(c.id, s)} />
                 <button className="chip" onClick={() => onTrain(c.id)}>treinar</button>
               </div>
             </div>
@@ -120,7 +121,14 @@ export function Browse({ set, marks, progress, onTrain, onFocus, onMark }: {
         })}
         {shown.length === 0 && <div className="empty">Nenhum caso com esses filtros.</div>}
       </div>
-      <div className="note">Os diagramas mostram o caso no slot direito, sem giro. Só o canto e a aresta coloridos importam; o resto da camada de cima fica cinza.</div>
+      {set.view === 'f2l' && (
+        <div className="note">Os diagramas mostram o caso no slot direito, sem giro. Só o canto e a aresta coloridos importam; o resto da camada de cima fica cinza.</div>
+      )}
+      {open && (
+        <CaseDetail key={`${set.id}/${open.id}`} set={set} c={open} start={states.get(open.id)!} mark={markOf(open)}
+          onMark={(s) => onMark(open.id, s)} onTrain={() => onTrain(open.id)} onClose={() => setOpen(null)}
+          beginner={beginner} onBeginner={onBeginner} />
+      )}
     </section>
   );
 }

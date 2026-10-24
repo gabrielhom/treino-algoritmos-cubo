@@ -112,6 +112,38 @@ export function renderCube(fill: (k: number) => string, mirrored: boolean, anim:
   return quads.sort((a, b) => a.depth - b.depth);
 }
 
+const cubieCoord = (c: number) => (Math.abs(c) === 3 ? Math.sign(c) * 2 : c);
+
+/** Sticker positions on the layer(s) a move turns. */
+export function layerStickers(move: string): Set<number> {
+  const def = MOVE_DEF[move[0]];
+  const out = new Set<number>();
+  POS.forEach((p, k) => { if (def.sel(cubieCoord(p[def.axis]))) out.add(k); });
+  return out;
+}
+
+/**
+ * Screen-space arrow (front-right camera) across the U or F face of the turning layer,
+ * pointing the way the stickers travel. `t` is the turn progress the icon is drawn at.
+ */
+export function moveArrow(move: string, t = 0): { from: [number, number]; to: [number, number] } {
+  const def = MOVE_DEF[move[0]];
+  const picked = [-2, 0, 2].filter(def.sel);
+  const c = picked.reduce((a, b) => a + b, 0) / picked.length;
+  const p: V = def.axis === 0 ? [c, 0, 3] : def.axis === 1 ? [0, c, 3] : [0, 3, c];
+  const angle = moveAngle(move);
+  const q = rotate(p, def.axis, Math.sign(angle) * 1e-3);
+  const d = q.map((x, i) => x - p[i]);
+  const len = Math.hypot(...d);
+  const H = 2;
+  const turned = angle * ease(t);
+  const at = (s: number) => {
+    const v = project(rotate(p.map((x, i) => x + (s * H * d[i]) / len) as V, def.axis, turned), false);
+    return [v[0], v[1]] as [number, number];
+  };
+  return { from: at(-1), to: at(1) };
+}
+
 /** Faces of the solved cube visible from the camera. */
 export const visibleFaces = (mirrored: boolean): Face[] => (mirrored ? ['U', 'F', 'L'] : ['U', 'F', 'R']);
 
