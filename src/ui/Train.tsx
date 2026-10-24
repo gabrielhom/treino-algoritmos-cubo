@@ -53,34 +53,38 @@ export function Train({ active, settings, caseState, onRate, beginner, onBeginne
 
   return (
     <section>
-      <div className="card">
-        <div className="caselabel">
-          <span>Caso <b>{label}</b></span>
-          <span>{settings.showNumber ? set.groups[active.case.group] : ''}</span>
-        </div>
-        <Diagram state={player.state} relevant={relevant} view={set.view} mirrored={active.mirrored} anim={player.anim} />
-        <div className="scramble">
-          <div className="lbl">Aplique no cubo montado:</div>
-          <div className="moves">
-            {active.scramble.map((m, i) => <span key={i} className={`mv${isAuf(i) ? ' auf' : ''}${beginner ? ' drawn' : ''}`}>{beginner && <MoveIcon move={m} size={36} />}{m}</span>)}
+      <div className="card train">
+        <div className="train-case">
+          <div className="caselabel">
+            <span>Caso <b>{label}</b></span>
+            <span>{settings.showNumber ? set.groups[active.case.group] : ''}</span>
           </div>
+          <Diagram state={player.state} relevant={relevant} view={set.view} mirrored={active.mirrored} anim={player.anim} />
         </div>
-        {active.revealed && (
-          <div className="solution" ref={solutionRef}>
-            <AlgSteps stepper={stepper} beginner={beginner} onBeginner={onBeginner} />
-            <AlgChoice labels={options.map((a) => displaySolution(active, a))} value={pick} onChange={(i) => setPicked(options[i])} />
-            <div className="meta">
-              Reconhecimento: {fmtS(active.elapsedMs)} s{avg}
-              {active.postAuf ? ' · a primeira letra desfaz o giro aleatório' : ''}
-              {active.preAuf ? ' · a última letra é o giro final' : ''}
-            </div>
-            <div className="rate">
-              <button className="easy" onClick={() => onRate('easy')}>Fácil</button>
-              <button className="mid" onClick={() => onRate('ok')}>Ok</button>
-              <button className="hard" onClick={() => onRate('hard')}>Difícil</button>
+        <div className="train-work">
+          <div className="scramble">
+            <div className="lbl">Aplique no cubo montado:</div>
+            <div className="moves">
+              {active.scramble.map((m, i) => <span key={i} className={`mv${isAuf(i) ? ' auf' : ''}${beginner ? ' drawn' : ''}`}>{beginner && <MoveIcon move={m} size={36} />}{m}</span>)}
             </div>
           </div>
-        )}
+          {active.revealed && (
+            <div className="solution" ref={solutionRef}>
+              <AlgSteps stepper={stepper} beginner={beginner} onBeginner={onBeginner} />
+              <AlgChoice labels={options.map((a) => displaySolution(active, a))} value={pick} onChange={(i) => setPicked(options[i])} />
+              <div className="meta">
+                Reconhecimento: {fmtS(active.elapsedMs)} s{avg}
+                {active.postAuf ? ' · a primeira letra desfaz o giro aleatório' : ''}
+                {active.preAuf ? ' · a última letra é o giro final' : ''}
+              </div>
+              <div className="rate">
+                <button className="easy" onClick={() => onRate('easy')}>Fácil</button>
+                <button className="mid" onClick={() => onRate('ok')}>Ok</button>
+                <button className="hard" onClick={() => onRate('hard')}>Difícil</button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       <div className="card mini">
         {active.revealed

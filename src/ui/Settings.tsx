@@ -23,7 +23,7 @@ export function Settings({ set, settings, onChange, onReset, beginner, onBeginne
     onChange({ ...settings, groups: gs.includes(g) ? gs.filter((x) => x !== g) : [...gs, g].sort((a, b) => a - b) });
   };
   return (
-    <section>
+    <section className="cols">
       <div className="card">
         <h2>Modo iniciante</h2>
         <div className="row">

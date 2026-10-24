@@ -121,7 +121,7 @@ header .seg button{flex:none;white-space:nowrap}
 .stephead{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .stephead .chip{padding:6px 10px;font-size:13px}
 .alg.tiles,.alg.compact{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap}
-.alg.tiles{gap:6px}
+.alg.tiles{gap:14px 6px;align-items:center;padding-top:7px}
 .alg.compact{gap:2px 4px}
 .step{display:flex;flex-direction:column;align-items:center;gap:2px;font:inherit;color:var(--ink);background:var(--surface);cursor:pointer;transition:opacity .15s,background .15s}
 .tiles .step{width:58px;padding:5px 2px 4px;border:1px solid var(--line);border-radius:10px}
@@ -131,6 +131,18 @@ header .seg button{flex:none;white-space:nowrap}
 .step.done{opacity:.4}
 .step.next{background:var(--soft);border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .compact .step.next{box-shadow:inset 0 -2px 0 var(--ink)}
+/* trigger groups (sexy move, sledgehammer...): a captioned box around the tiles, parentheses in compact text */
+.alg .trig ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap}
+.tiles .trig{position:relative;max-width:100%;padding:4px;border:1.5px solid var(--line-2);border-radius:14px}
+.tiles .trig ol{gap:6px}
+.trigname{position:absolute;top:-8px;left:9px;padding:0 4px;background:var(--surface);color:var(--ink-2);font-size:11px;font-weight:600;line-height:14px;white-space:nowrap}
+.trigtext{white-space:nowrap}
+.compact .trig{display:flex;align-items:center}
+.compact .trig ol{gap:2px 4px}
+.compact .trigname{display:none}
+.compact .trig::before,.compact .trig::after{font:600 20px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink-2)}
+.compact .trig::before{content:"(";content:"(" / "";margin-right:-3px}
+.compact .trig::after{content:")";content:")" / "";margin-left:-3px}
 .moveicon{display:block}
 .moveicon path{fill:none;stroke-linecap:round;stroke-linejoin:round}
 .moveicon .halo{stroke:#fff;stroke-width:1.25}
@@ -161,4 +173,23 @@ dialog.sheet::backdrop{background:rgba(0,0,0,.5)}
 @media (prefers-reduced-motion:no-preference){
   dialog.sheet[open]{animation:sheet-up .22s ease-out}
   @keyframes sheet-up{from{transform:translateY(24px);opacity:0}}
+}
+/* desktop: use the width instead of a phone-sized column */
+.casecard .row>.seg{flex:none}
+@media (min-width:960px){
+  .app{max-width:1180px;padding-left:24px;padding-right:24px}
+  .tabs .tab{flex:0 0 auto;padding:9px 18px;font-size:14px}
+  .actions .in{max-width:1180px;grid-template-columns:repeat(2,220px);justify-content:end}
+  .card.train{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:28px;align-items:start;padding:20px}
+  .train-case{position:sticky;top:14px}
+  .train .diagram>div{max-width:none}
+  .train-work>.scramble:first-child{margin-top:0}
+  .cols{column-count:2;column-gap:12px}
+  .cols>.card{break-inside:avoid;margin:0 0 12px}
+  dialog.sheet{width:min(940px,calc(100% - 48px))}
+  .sheet-in{max-width:none;padding:20px 24px;display:grid;grid-template-columns:320px minmax(0,1fr);column-gap:28px;align-items:start}
+  .sheet-head{grid-column:1/-1}
+  .sheet-cube{grid-column:1;grid-row:2/span 3}
+  .sheet-cube svg{width:100%;height:auto}
+  .sheet-in>.algsteps,.sheet-in>.algchoice,.sheet-foot{grid-column:2}
 }

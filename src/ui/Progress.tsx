@@ -84,7 +84,7 @@ export function Progress({ set, settings, attempts, caseStates, onTrain, onFocus
   );
 
   return (
-    <section>
+    <section className="cols">
       <div className="card">
         <h2>{set.name}</h2>
         <div className="row">

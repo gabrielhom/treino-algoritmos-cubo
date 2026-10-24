@@ -7,6 +7,7 @@ import { TopView } from '../diagram/Diagram';
 import type { CaseMark, CaseState, MarkStatus } from '../progress/model';
 import type { AlgCase, AlgSet } from '../sets/types';
 import { weightOf } from '../trainer/trainer';
+import { AlgText } from './AlgSteps';
 import { CaseDetail, MarkSeg } from './CaseDetail';
 
 export function caseStatesOf(set: AlgSet): Map<string | number, State> {
@@ -108,7 +109,7 @@ export function Browse({ set, marks, progress, onTrain, onFocus, onMark, beginne
                     ? <Cube3D state={st} relevant={relevant} mirrored={false} size={150} label={`Caso ${c.id}`} />
                     : <TopView state={st} relevant={relevant} size={140} />}
                 </span>
-                <span className="mono alg">{c.alg}</span>
+                <span className="mono alg"><AlgText alg={c.alg} /></span>
               </button>
               {c.alts.length > 0 && <div className="mini">+{c.alts.length} alternativa{c.alts.length > 1 ? 's' : ''}</div>}
               <div className="mini">{p?.seen_count ? `${p.seen_count}x · ${(p.total_ms / p.seen_count / 1000).toFixed(1)} s · peso ${weightOf(p)}` : 'nunca treinado'}</div>
